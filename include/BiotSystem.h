@@ -1,7 +1,8 @@
 #ifndef BIOT_SYSTEM_H_
 #define BIOT_SYSTEM_H_
 #include "DealiiHeader.h"
-
+#include "InitialPressure.h"
+#include "RightHandSide.h"
 using namespace dealii;
 
 class BiotSystem
@@ -14,7 +15,7 @@ public:
 private:
     double del_t = 0.1;
     double T = 1;
-    int time_step = 0;
+    int timestep = 0;
 
     Triangulation<dim> triangulation;
     // pressure solution
@@ -37,10 +38,18 @@ private:
     Vector<double> solution_displacement;
     Vector<double> system_rhs_displacement;
 
+    // Data
+    double mu_f = 1; // fluid viscosity
+    RightHandSide right_hand_side; // mechanics equation body force
+    InitialPressure initial_pressure;
+    ConstantFunction<dim> permeability;
+    ConstantFunction<dim> lambda, mu;
     // coupling
 
     double biot_alpha = 0.8;
-    double fs_threshold = 1e-8;
+    double K_b = 1;
+    double biot_inv_M = 0;
+    double tol_fixed_stress = 1e-8;
     Vector<double> prev_timestep_sol_pressure;
     Vector<double> prev_timestep_sol_displacement;
     Vector<double> prev_fs_sol_pressure;
@@ -56,6 +65,8 @@ private:
     void solve_displacement();
 
     void fixed_stress_iteration();
+
+    bool convergence_fixed_stress(int fs_count); // check the convergence of fixed-stress iteration
 
     void output_results() const;
 

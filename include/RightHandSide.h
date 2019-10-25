@@ -1,6 +1,6 @@
 #ifndef RIGHTHANDSIDE_H_
 #define RIGHTHANDSIDE_H_
-#include "../include/DealIIHeader.h"
+#include "DealiiHeader.h"
 using namespace dealii;
   class RightHandSide :  public Function<dim>
   {

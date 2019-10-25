@@ -1,6 +1,4 @@
 #include "BiotSystem.h"
-#include "RightHandSide.h"
-#include "InitialPressure.h"
 void BiotSystem::assemble_system_displacement()
 {
     QGauss<dim> quadrature_formula(2);
@@ -23,9 +21,6 @@ void BiotSystem::assemble_system_displacement()
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-    ConstantFunction<dim> lambda(1.), mu(1.);
-    RightHandSide right_hand_side;
-    InitialPressure initial_pressure;
 
     std::vector<double> lambda_values(n_q_points);
     std::vector<double> mu_values(n_q_points);
@@ -54,7 +49,7 @@ void BiotSystem::assemble_system_displacement()
         mu.value_list(fe_values.get_quadrature_points(), mu_values);
         right_hand_side.vector_value_list(fe_values.get_quadrature_points(),
                                           rhs_values);
-        if (time_step == 0)
+        if (timestep == 0)
         {
             initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
         }
@@ -100,9 +95,9 @@ void BiotSystem::assemble_system_displacement()
 
             for (unsigned int q_point = 0; q_point < n_q_points; ++q_point)
             {
-                cell_rhs(i) += fe_values.shape_value(i, q_point) *
-                               rhs_values[q_point](component_i) *
-                               fe_values.JxW(q_point);
+                // cell_rhs(i) += fe_values.shape_value(i, q_point) *
+               //                rhs_values[q_point](component_i) *
+                //               fe_values.JxW(q_point);
                 // coupling pressure
                 cell_rhs(i) += fe_values.shape_value(i, q_point) *
                                biot_alpha * pore_pressure_values[q_point] *
