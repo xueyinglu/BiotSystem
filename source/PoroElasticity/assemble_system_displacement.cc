@@ -1,4 +1,5 @@
 #include "BiotSystem.h"
+#include "AuxTools.h"
 using namespace std;
 void BiotSystem::assemble_system_displacement()
 {
@@ -22,13 +23,15 @@ void BiotSystem::assemble_system_displacement()
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-
     std::vector<double> lambda_values(n_q_points);
     std::vector<double> mu_values(n_q_points);
     std::vector<Vector<double>> rhs_values(n_q_points,
                                            Vector<double>(dim));
+    //std::vector<Vector<double>> grad_p_values(n_q_points,
+    //                                       Vector<double>(dim));
     std::vector<double> pore_pressure_values(n_q_points);
-
+    Tensor<2,dim> identity = Tensors::get_Identity<dim> ();
+    const FEValuesExtractors::Vector displacements (0);
     // Now we can begin with the loop over all cells:
     typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_displacement.begin_active(),
                                                    endc = dof_handler_displacement.end();
@@ -50,9 +53,10 @@ void BiotSystem::assemble_system_displacement()
         mu.value_list(fe_values.get_quadrature_points(), mu_values);
         right_hand_side.vector_value_list(fe_values.get_quadrature_points(),
                                           rhs_values);
-        if (timestep == 0)
+        if (timestep == 0) // initialize u_0
         {
             initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
+            //initial_pressure.grad_list(fe_values_pressure.get_quadrature_points(), grad_p_values);
             // for (int q = 0 ; q <n_q_points;q++){
             //     cout << "initial pressure [q] = " <<pore_pressure_values[q]<<endl;
             //}
@@ -61,6 +65,8 @@ void BiotSystem::assemble_system_displacement()
         {
             fe_values_pressure.get_function_values(solution_pressure, pore_pressure_values);
         }
+
+        /*
         for (unsigned int i = 0; i < dofs_per_cell; ++i)
         {
             const unsigned int
@@ -89,26 +95,60 @@ void BiotSystem::assemble_system_displacement()
                 }
             }
         }
-
-        // Assembling the right hand side is also just as discussed in the
-        // introduction:
+        
+        
         for (unsigned int i = 0; i < dofs_per_cell; ++i)
         {
             const unsigned int
                 component_i = fe_displacement.system_to_component_index(i).first;
 
             for (unsigned int q_point = 0; q_point < n_q_points; ++q_point)
-             {  // body force 
+            { // body force
                 // cell_rhs(i) += fe_values.shape_value(i, q_point) *
-               //                rhs_values[q_point](component_i) *
+                //                rhs_values[q_point](component_i) *
                 //               fe_values.JxW(q_point);
                 // coupling pressure
-                cell_rhs(i) += fe_values.shape_grad(i, q_point)[component_i] *
-                               biot_alpha * pore_pressure_values[q_point] *
+                //cell_rhs(i) += fe_values.shape_grad(i, q_point)[component_i] *
+                //               biot_alpha * pore_pressure_values[q_point] *
+                //               fe_values.JxW(q_point);
+                cell_rhs(i) += fe_values.shape_value(i, q_point) *
+                               biot_alpha * grad_p_values[q_point][component_i] *
                                fe_values.JxW(q_point);
             }
         }
+        */
+       
+        // Assemble the cell matrix as in elasticity_cg
+        for (unsigned int q = 0; q < n_q_points; ++q)
+        {
+            std::vector<Tensor<1, dim>> phi_i_u(dofs_per_cell);
+            std::vector<Tensor<2, dim>> phi_i_grads_u(dofs_per_cell);
+            std::vector<Tensor<2, dim>> E_phi(dofs_per_cell);
+            std::vector<Tensor<2, dim>> sigma_phi(dofs_per_cell);
 
+            // Compute and store desired quantities
+            for (unsigned int k = 0; k < dofs_per_cell; ++k)
+            {
+                phi_i_grads_u[k] = fe_values[displacements].gradient(k, q);
+                E_phi[k] = 0.5 * (phi_i_grads_u[k] + transpose(phi_i_grads_u[k]));
+                sigma_phi[k] = 2.0 * mu_values[q] * E_phi[k] + lambda_values[q] * trace(E_phi[k]) * identity;
+            }
+
+            for (unsigned int i = 0; i < dofs_per_cell; ++i)
+            {
+                for (unsigned int j = 0; j < dofs_per_cell; ++j)
+                { // Displacements
+                    cell_matrix(j, i) += fe_values.JxW(q) * scalar_product(sigma_phi[i], E_phi[j]);
+                }
+
+                // assemble cell level rhs as in elasticity_cg
+                cell_rhs(i) += biot_alpha * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
+                 //cell_rhs(i) += biot_alpha *grad_p_values[q] * fe_values[displacements].value(i,q) *fe_values.JxW(q);
+            }
+            
+        } // end q_point
+        
+        
         cell->get_dof_indices(local_dof_indices);
         for (unsigned int i = 0; i < dofs_per_cell; ++i)
         {

@@ -13,8 +13,8 @@ public:
     void run_fixed_stress();
 
 private:
-    double del_t = 2.5e-4;
-    double T = 0.1;
+    double del_t = 0.01;
+    double T = 10;
     int timestep = 0;
 
     Triangulation<dim> triangulation;
@@ -47,9 +47,9 @@ private:
     // coupling
 
     double biot_alpha = 0.75;
-    double K_b = 1;
+    double K_b = 0.5;
     double biot_inv_M = 3./28;
-    double tol_fixed_stress = 1e-4;
+    double tol_fixed_stress = 1e-3;
     Vector<double> prev_timestep_sol_pressure;
     Vector<double> prev_timestep_sol_displacement;
     Vector<double> prev_fs_sol_pressure;
@@ -58,7 +58,7 @@ private:
     void make_grid();
     void setup_system();
 
-    void assemble_system_pressure();
+    void assemble_system_pressure(int fs_count);
     void assemble_system_displacement();
 
     void solve_pressure();
@@ -68,7 +68,8 @@ private:
 
     bool convergence_fixed_stress(int fs_count); // check the convergence of fixed-stress iteration
 
-    void output_results() const;
+    void output_displacement(int timestep, int fs_count) const;
+    void output_pressure(int timestep, int fs_count) const;
 
 };
 

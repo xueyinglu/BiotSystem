@@ -2,6 +2,7 @@
 #define INITIALPRESSURE_H_
 // class for initial pressure for parabolic problems
 #include "DealiiHeader.h"
+using namespace std;
 using namespace dealii;
 class InitialPressure: public Function<dim>{
     public:
@@ -11,6 +12,7 @@ class InitialPressure: public Function<dim>{
 
         virtual double value(const Point<dim> &p,
                          const unsigned int component = 0) const;
+        virtual void grad_list(const vector<Point<dim>> &points, vector<Vector<double> > & values) const;
 
 };
 #endif

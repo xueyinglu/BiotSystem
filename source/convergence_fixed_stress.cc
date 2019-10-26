@@ -29,7 +29,7 @@ bool BiotSystem::convergence_fixed_stress(int fs_count)
         fe_value_pressure.reinit(cell);
         fe_value_displacement.reinit(cell_displacement);
         fe_value_pressure.get_function_values(solution_pressure, pressure_values);
-        if (timestep == 0 && fs_count == 1)
+        if (timestep == 1 && fs_count == 1)
         {
             initial_pressure.value_list(fe_value_pressure.get_quadrature_points(), prev_fs_sol_pressure_values);
         }

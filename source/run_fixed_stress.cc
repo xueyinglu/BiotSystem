@@ -1,18 +1,22 @@
 #include "BiotSystem.h"
 using namespace std;
-void BiotSystem::run_fixed_stress(){
+void BiotSystem::run_fixed_stress()
+{
     make_grid();
     setup_system();
     // Initialize u_0
+    cout<<"Initializing u_0"<<endl;
     assemble_system_displacement();
     solve_displacement();
     prev_timestep_sol_displacement = solution_displacement;
 
-    for (timestep = 0 ; timestep < (T/del_t ) ; timestep++){
-        cout << "timestep = " <<timestep << endl;
+    for (timestep = 1; timestep < (T / del_t); timestep++)
+    {
+        cout << "timestep = " << timestep << endl;
         fixed_stress_iteration();
         prev_timestep_sol_displacement = solution_displacement;
         prev_timestep_sol_pressure = solution_pressure;
+        output_displacement(timestep, -1);
+        output_pressure(timestep, -1);
     }
-    output_results();
 }
