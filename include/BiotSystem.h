@@ -13,8 +13,8 @@ public:
     void run_fixed_stress();
 
 private:
-    double del_t = 0.1;
-    double T = 1;
+    double del_t = 2.5e-4;
+    double T = 0.1;
     int timestep = 0;
 
     Triangulation<dim> triangulation;
@@ -46,10 +46,10 @@ private:
     ConstantFunction<dim> lambda, mu;
     // coupling
 
-    double biot_alpha = 0.8;
+    double biot_alpha = 0.75;
     double K_b = 1;
-    double biot_inv_M = 0;
-    double tol_fixed_stress = 1e-8;
+    double biot_inv_M = 3./28;
+    double tol_fixed_stress = 1e-4;
     Vector<double> prev_timestep_sol_pressure;
     Vector<double> prev_timestep_sol_displacement;
     Vector<double> prev_fs_sol_pressure;

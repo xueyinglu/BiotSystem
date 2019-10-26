@@ -8,7 +8,7 @@ void BiotSystem::run_fixed_stress(){
     solve_displacement();
     prev_timestep_sol_displacement = solution_displacement;
 
-    for (timestep = 0 ; timestep <10; timestep++){
+    for (timestep = 0 ; timestep < (T/del_t ) ; timestep++){
         cout << "timestep = " <<timestep << endl;
         fixed_stress_iteration();
         prev_timestep_sol_displacement = solution_displacement;

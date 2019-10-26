@@ -69,10 +69,10 @@ void BiotSystem::assemble_system_pressure()
                          fe_value.shape_value(i, q) * fe_value.shape_value(i, q) * fe_value.JxW(q)); // phi(x_q)*phi(x_q) dx
                 }
                 // source term
-                cell_rhs(i) +=
-                    (fe_value.shape_value(i, q) * // grad phi_i(x_q)
-                     1 *                          // f(x_q)
-                     fe_value.JxW(q));            // dx
+                //cell_rhs(i) +=
+                //    (fe_value.shape_value(i, q) * // grad phi_i(x_q)
+                //     1 *                          // f(x_q)
+                //     fe_value.JxW(q));            // dx
 
                 // prev time step 
                 cell_rhs(i) += 

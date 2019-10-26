@@ -7,11 +7,8 @@ double InitialPressure::value(const dealii::Point<dim> &p,
 
     double t = this->get_time();
 
-    double return_value = 0;
-
-    double x = p(0);
-    double y = p(1);
-
+    double PI = atan(1)*4;
+    /*
     if (component == 0)
     {
         return_value = cos(x - y);
@@ -27,6 +24,6 @@ double InitialPressure::value(const dealii::Point<dim> &p,
         cout << "ERROR " << component << endl;
         exit(0);
     }
-
-    return return_value;
+    */
+    return sin(PI*p(0))*sin(PI*p(1));
 }

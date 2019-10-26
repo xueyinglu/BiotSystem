@@ -1,4 +1,5 @@
 #include "BiotSystem.h"
+using namespace std;
 void BiotSystem::assemble_system_displacement()
 {
     QGauss<dim> quadrature_formula(2);
@@ -52,6 +53,9 @@ void BiotSystem::assemble_system_displacement()
         if (timestep == 0)
         {
             initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
+            // for (int q = 0 ; q <n_q_points;q++){
+            //     cout << "initial pressure [q] = " <<pore_pressure_values[q]<<endl;
+            //}
         }
         else
         {
@@ -94,12 +98,12 @@ void BiotSystem::assemble_system_displacement()
                 component_i = fe_displacement.system_to_component_index(i).first;
 
             for (unsigned int q_point = 0; q_point < n_q_points; ++q_point)
-            {
+             {  // body force 
                 // cell_rhs(i) += fe_values.shape_value(i, q_point) *
                //                rhs_values[q_point](component_i) *
                 //               fe_values.JxW(q_point);
                 // coupling pressure
-                cell_rhs(i) += fe_values.shape_value(i, q_point) *
+                cell_rhs(i) += fe_values.shape_grad(i, q_point)[component_i] *
                                biot_alpha * pore_pressure_values[q_point] *
                                fe_values.JxW(q_point);
             }
