@@ -12,7 +12,7 @@ class InitialPressure: public Function<dim>{
 
         virtual double value(const Point<dim> &p,
                          const unsigned int component = 0) const;
-        virtual void grad_list(const vector<Point<dim>> &points, vector<Vector<double> > & values) const;
+        virtual void grad_list(const vector<Point<dim>> &points, vector<Tensor<1, dim>> & values) const;
 
 };
 #endif

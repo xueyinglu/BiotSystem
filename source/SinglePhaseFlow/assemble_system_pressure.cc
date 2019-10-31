@@ -2,7 +2,7 @@
 using namespace std;
 void BiotSystem::assemble_system_pressure(int fs_count)
 {
-    QGauss<dim> quadrature(fe_pressure.degree + 1);
+    QGauss<dim> quadrature(fe_pressure.degree + 2);
     FEValues<dim> fe_value(fe_pressure,
                            quadrature, update_values | update_quadrature_points | update_gradients | update_JxW_values);
     FEValues<dim> fe_value_displacement(fe_displacement,

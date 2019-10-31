@@ -3,7 +3,7 @@
 using namespace std;
 void BiotSystem::assemble_system_displacement()
 {
-    QGauss<dim> quadrature_formula(2);
+    QGauss<dim> quadrature_formula(fe_displacement.degree + 2);
 
     FEValues<dim> fe_values(fe_displacement, quadrature_formula,
                             update_values | update_gradients |

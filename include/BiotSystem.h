@@ -4,7 +4,7 @@
 #include "InitialPressure.h"
 #include "RightHandSide.h"
 using namespace dealii;
-
+using namespace std;
 class BiotSystem
 {
 public:
@@ -13,9 +13,12 @@ public:
     void run_fixed_stress();
 
 private:
-    double del_t = 0.01;
-    double T = 10;
+    double del_t = 2.5e-4;
+    double T = 0.05;
+    double t = 0;
     int timestep = 0;
+    int num_global_refinement = 2;
+    double h = 1./num_global_refinement;
 
     Triangulation<dim> triangulation;
     // pressure solution
@@ -37,6 +40,7 @@ private:
 
     Vector<double> solution_displacement;
     Vector<double> system_rhs_displacement;
+    ConvergenceTable convergence_table;
 
     // Data
     double mu_f = 1; // fluid viscosity
@@ -49,11 +53,20 @@ private:
     double biot_alpha = 0.75;
     double K_b = 0.5;
     double biot_inv_M = 3./28;
-    double tol_fixed_stress = 1e-3;
+    double tol_fixed_stress = 1e-5;
     Vector<double> prev_timestep_sol_pressure;
     Vector<double> prev_timestep_sol_displacement;
     Vector<double> prev_fs_sol_pressure;
     Vector<double> prev_fs_sol_displacement;
+
+    /* global a posteriori error estimators (recorded for each time step) */
+    vector<double> eta_fs;
+    vector<double> eta_alg;
+    vector<double> eta_time;
+    vector<double> eta_flow;
+
+    ConvergenceTable a_posterior_indicators_table;
+
 
     void make_grid();
     void setup_system();
@@ -66,10 +79,16 @@ private:
 
     void fixed_stress_iteration();
 
-    bool convergence_fixed_stress(int fs_count); // check the convergence of fixed-stress iteration
+    double check_fs_convergence(int fs_count); // check the convergence of fixed-stress iteration
 
     void output_displacement(int timestep, int fs_count) const;
     void output_pressure(int timestep, int fs_count) const;
+    void output_error();
+    void calc_error(); // compute the errors
+    void process_solution(int fs_count); // compute the errors
+    void plot_error(int fs_count) const;
+
+    void calc_a_posteriori_indicators();
 
 };
 
