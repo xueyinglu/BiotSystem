@@ -23,6 +23,7 @@ void BiotSystem::run_fixed_stress()
         fixed_stress_iteration();
         output_displacement(timestep, -1);
         output_pressure(timestep, -1);
+        plot_error();
         calc_error();
         calc_a_posteriori_indicators();
         prev_timestep_sol_displacement = solution_displacement;

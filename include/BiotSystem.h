@@ -18,7 +18,7 @@ private:
     double t = 0;
     int timestep = 0;
     int num_global_refinement = 2;
-    double h = 1./num_global_refinement;
+    double h = 1./pow(2,num_global_refinement);
 
     Triangulation<dim> triangulation;
     // pressure solution
@@ -86,7 +86,7 @@ private:
     void output_error();
     void calc_error(); // compute the errors
     void process_solution(int fs_count); // compute the errors
-    void plot_error(int fs_count) const;
+    void plot_error() const;
 
     void calc_a_posteriori_indicators();
 
