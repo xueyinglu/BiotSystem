@@ -5,15 +5,16 @@ void BiotSystem::run_fixed_stress()
 {
     make_grid();
     setup_system();
+    // interpolate initial pressure
+    VectorTools::interpolate(dof_handler_pressure,
+                            PressureSolution(0),
+                            solution_pressure);
+    prev_timestep_sol_pressure = solution_pressure;
     // Initialize u_0
     cout<<"Initializing u_0"<<endl;
     assemble_system_displacement();
     solve_displacement();
     prev_timestep_sol_displacement = solution_displacement;
-    // interpolate initial pressure
-    VectorTools::interpolate(dof_handler_pressure,
-                            PressureSolution(0),
-                            prev_timestep_sol_pressure);
     
     for (timestep = 1; timestep < (T / del_t); timestep++)
     // for (timestep = 1; timestep < 2 ; timestep++)

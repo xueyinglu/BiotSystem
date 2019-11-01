@@ -3,8 +3,8 @@ using namespace std;
 // check the convergence of fixed stress, return the residual
 double BiotSystem::check_fs_convergence(int fs_count)
 {
-    QGauss<dim> quadrature_pressure(fe_pressure.degree + 2);
-    QGauss<dim> quadrature_displacement(fe_displacement.degree + 2);
+    QGauss<dim> quadrature_pressure(fe_pressure.degree + 1);
+    QGauss<dim> quadrature_displacement(fe_displacement.degree + 1);
     FEValues<dim> fe_value_pressure(fe_pressure,
                                     quadrature_pressure, update_values | update_quadrature_points | update_gradients | update_JxW_values);
     FEValues<dim> fe_value_displacement(fe_displacement,
@@ -30,6 +30,7 @@ double BiotSystem::check_fs_convergence(int fs_count)
         fe_value_pressure.reinit(cell);
         fe_value_displacement.reinit(cell_displacement);
         fe_value_pressure.get_function_values(solution_pressure, pressure_values);
+        /*
         if (timestep == 1 && fs_count == 1)
         {
             initial_pressure.value_list(fe_value_pressure.get_quadrature_points(), prev_fs_sol_pressure_values);
@@ -38,6 +39,8 @@ double BiotSystem::check_fs_convergence(int fs_count)
         {
             fe_value_pressure.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
         }
+        */
+        fe_value_pressure.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
         fe_value_displacement.get_function_gradients(solution_displacement, grad_u_values);
         fe_value_displacement.get_function_gradients(prev_fs_sol_displacement, prev_fs_sol_grad_u_values);
 

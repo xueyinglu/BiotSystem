@@ -58,7 +58,7 @@ void BiotSystem::process_solution(int fs_count)
                                       solution_pressure,
                                       PressureSolution(t),
                                       difference_per_cell_pressure,
-                                      QGauss<dim>(fe_pressure.degree + 2),
+                                      QGauss<dim>(fe_pressure.degree + 1),
                                       VectorTools::L2_norm);
     double L2_norm_pressure = difference_per_cell_pressure.l2_norm();
         //VectorTools::compute_global_error(triangulation,
@@ -67,9 +67,10 @@ void BiotSystem::process_solution(int fs_count)
     /* Calculate the L2 norm of displacement solution */
 
 
-    QGauss<dim> quadrature_displacement(fe_displacement.degree + 2);
-    FEValues<dim> fe_value_displacement(fe_displacement,
-                                        quadrature_displacement, update_values | update_quadrature_points | update_gradients | update_JxW_values);
+    QGauss<dim> quadrature_displacement(fe_displacement.degree + 1);
+    FEValues<dim> fe_value_displacement(fe_displacement, quadrature_displacement, 
+                                        update_values | update_quadrature_points 
+                                        | update_gradients | update_JxW_values);
     typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_displacement.begin_active(),
                                                    endc = dof_handler_displacement.end();
     const FEValuesExtractors::Vector displacements (0);

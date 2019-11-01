@@ -13,11 +13,11 @@ public:
     void run_fixed_stress();
 
 private:
-    double del_t = 2.5e-4;
-    double T = 0.05;
+    double del_t = 1e-4;
+    double T = 0.01;
     double t = 0;
     int timestep = 0;
-    int num_global_refinement = 2;
+    int num_global_refinement = 4;
     double h = 1./pow(2,num_global_refinement);
 
     Triangulation<dim> triangulation;
@@ -45,7 +45,7 @@ private:
     // Data
     double mu_f = 1; // fluid viscosity
     RightHandSide right_hand_side; // mechanics equation body force
-    InitialPressure initial_pressure;
+    //InitialPressure initial_pressure;
     ConstantFunction<dim> permeability;
     ConstantFunction<dim> lambda, mu;
     // coupling
@@ -53,7 +53,7 @@ private:
     double biot_alpha = 0.75;
     double K_b = 0.5;
     double biot_inv_M = 3./28;
-    double tol_fixed_stress = 1e-5;
+    double tol_fixed_stress = 1e-3;
     Vector<double> prev_timestep_sol_pressure;
     Vector<double> prev_timestep_sol_displacement;
     Vector<double> prev_fs_sol_pressure;

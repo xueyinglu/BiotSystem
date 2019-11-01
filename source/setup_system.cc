@@ -11,7 +11,6 @@ void BiotSystem::setup_system()
 
     system_matrix_pressure.reinit(sparse_pattern_pressure);
     solution_pressure.reinit(dof_handler_pressure.n_dofs());
-    prev_timestep_sol_pressure.reinit(dof_handler_pressure.n_dofs());
     system_rhs_pressure.reinit(dof_handler_pressure.n_dofs());
 
     dof_handler_displacement.distribute_dofs(fe_displacement);

@@ -17,10 +17,12 @@ void BiotSystem::output_error() {
     a_posterior_indicators_table.set_precision("eta_alg", 8);
     a_posterior_indicators_table.set_precision("eta_time", 8);
     a_posterior_indicators_table.set_precision("eta_flow", 8);
+    a_posterior_indicators_table.set_precision("flux_jump", 8);
     a_posterior_indicators_table.set_scientific("eta_fs",true);
     a_posterior_indicators_table.set_scientific("eta_alg",true);
     a_posterior_indicators_table.set_scientific("eta_time", true);
     a_posterior_indicators_table.set_scientific("eta_flow", true);
+    a_posterior_indicators_table.set_scientific("flux_jump", true);
     ofstream aposterior_table_file("aposteriori.tex");
     a_posterior_indicators_table.write_tex(aposterior_table_file);
 }

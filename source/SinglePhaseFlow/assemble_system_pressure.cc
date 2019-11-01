@@ -2,7 +2,7 @@
 using namespace std;
 void BiotSystem::assemble_system_pressure(int fs_count)
 {
-    QGauss<dim> quadrature(fe_pressure.degree + 2);
+    QGauss<dim> quadrature(fe_pressure.degree + 1);
     FEValues<dim> fe_value(fe_pressure,
                            quadrature, update_values | update_quadrature_points | update_gradients | update_JxW_values);
     FEValues<dim> fe_value_displacement(fe_displacement,
@@ -34,6 +34,7 @@ void BiotSystem::assemble_system_pressure(int fs_count)
         cell_rhs = 0;
         /* get the function values at current element */
         permeability.value_list(fe_value.get_quadrature_points(), permeability_values);
+        /*
         if (timestep == 1)
         {
             initial_pressure.value_list(fe_value.get_quadrature_points(), prev_timestep_sol_pressure_values);
@@ -52,14 +53,15 @@ void BiotSystem::assemble_system_pressure(int fs_count)
             fe_value.get_function_values(prev_timestep_sol_pressure, prev_timestep_sol_pressure_values);
             fe_value.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
         }
-
+        */
+        fe_value.get_function_values(prev_timestep_sol_pressure, prev_timestep_sol_pressure_values);
+        fe_value.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
         fe_value_displacement.get_function_gradients(prev_timestep_sol_displacement, prev_timestep_sol_grad_u_values);
         fe_value_displacement.get_function_gradients(prev_fs_sol_displacement, prev_fs_sol_grad_u_values);
         /* assemble cell level matrix and rhs */
         for (unsigned int q = 0; q < n_q_points; q++)
         {
             // calculate the mean stress value at the quadrature point
-
             prev_timestep_mean_stress = K_b * (prev_timestep_sol_grad_u_values[q][0][0] + prev_timestep_sol_grad_u_values[q][1][1])
                                          - biot_alpha * prev_timestep_sol_pressure_values[q];
             prev_fs_mean_stress = K_b * (prev_fs_sol_grad_u_values[q][0][0] + prev_fs_sol_grad_u_values[q][1][1])
@@ -81,7 +83,7 @@ void BiotSystem::assemble_system_pressure(int fs_count)
                 }
                 // source term
                 //cell_rhs(i) +=
-                //    (fe_value.shape_value(i, q) * // grad phi_i(x_q)
+                //    (fe_value.shape_value(i, q) * // phi_i(x_q)
                 //     1 *                          // f(x_q)
                 //     fe_value.JxW(q));            // dx
 

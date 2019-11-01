@@ -16,7 +16,7 @@ void BiotSystem::calc_a_posteriori_indicators()
 
     /* calculate eta_time */
     double eta_t_p_n = 0; //eta_t_p_n^2
-    QGauss<dim> quadrature_pressure(fe_pressure.degree + 2);
+    QGauss<dim> quadrature_pressure(fe_pressure.degree + 1);
     FEValues<dim> fe_value_pressure(fe_pressure, quadrature_pressure,
                                     update_values | update_quadrature_points | update_gradients | update_hessians | update_JxW_values);
     typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_pressure.begin_active(),
@@ -29,14 +29,14 @@ void BiotSystem::calc_a_posteriori_indicators()
     {
         fe_value_pressure.reinit(cell);
         fe_value_pressure.get_function_gradients(solution_pressure, grad_p_values);
-        if (timestep == 1)
-        {
-            initial_pressure.grad_list(fe_value_pressure.get_quadrature_points(), prev_timestep_grad_p_values);
-        }
-        else
-        {
+        //if (timestep == 1)
+        //{
+        //    initial_pressure.grad_list(fe_value_pressure.get_quadrature_points(), prev_timestep_grad_p_values);
+        //}
+        //else
+        //{
             fe_value_pressure.get_function_gradients(prev_timestep_sol_pressure, prev_timestep_grad_p_values);
-        }
+        //}
         permeability.value_list(fe_value_pressure.get_quadrature_points(), permeability_values);
         for (unsigned int q = 0; q < n_q_points; q++)
         {
@@ -64,7 +64,7 @@ void BiotSystem::calc_a_posteriori_indicators()
 
     double eta_flow_m = 0;
     // residual at cells
-    QGauss<dim> quadrature_displacement(fe_displacement.degree + 2);
+    QGauss<dim> quadrature_displacement(fe_displacement.degree + 1);
     FEValues<dim> fe_value_displacement(fe_displacement, quadrature_displacement,
                                         update_values | update_quadrature_points | update_gradients | update_JxW_values);
     vector<vector<Tensor<1, dim>>> prev_timestep_grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
@@ -98,42 +98,64 @@ void BiotSystem::calc_a_posteriori_indicators()
         }
     }
 
-    eta_flow_m = sqrt(eta_flow_m) * h * h * del_t;
-    /*
+    eta_flow_m = eta_flow_m * h * h * del_t;
+    
     // jump of flux at cell boundaries.
     double flux_jump = 0;
-    QGauss<dim> face_quadrature(fe_pressure.degree + 2);
-    const unsigned int n_face_q_points = face_quadrature.size();
+    QGauss<dim-1> face_quadrature(fe_pressure.degree + 1);
+    // const unsigned int n_face_q_points = face_quadrature.size();
     FEFaceValues<dim> fe_face_values(fe_pressure, face_quadrature,
                                     update_values | update_normal_vectors
                                     | update_gradients | update_quadrature_points
                                     | update_JxW_values);
-    FEFaceValues<dim> fe_face_neighbor_values(fe_pressure, face_quadrature,
+    FEFaceValues<dim> fe_face_values_neighbor(fe_pressure, face_quadrature,
                                     update_values | update_normal_vectors
                                     | update_gradients | update_quadrature_points
                                     | update_JxW_values);
     
     
-    vector<Tensor<1, dim>> face_grad_p_values(n_face_q_points);
+    // vector<Tensor<1, dim>> face_grad_p_values(n_face_q_points);
     cell = dof_handler_pressure.begin_active();
     for (; cell != endc; ++cell){
         fe_value_pressure.reinit(cell);
         for (unsigned int face_no = 0; face_no < GeometryInfo<dim>::faces_per_cell; ++face_no){
-            
-            
-            const unsigned int neighbor_face = cell -> neighbor_of_neighbor(face_no);
-            fe_face_values.reinit(cell, face_no);
-            fe_face_neighbor_values.re
-            fe_face_values.get_function_gradients(solution_pressure, face_grad_p_values);
-            for (unsigned int q = 0; q < n_face_q_points; q++){
-                flux_jump += 
+            const auto face = cell -> face(face_no);
+            if(!face -> at_boundary()){
+                Assert(cell -> neighbor(face_no).state() == IteratorState::valid, ExcInternalError());
+                const auto neighbor = cell-> neighbor(face_no);
+                vector<Tensor<1, dim>> face_grad_p_values(fe_face_values.n_quadrature_points);
+                vector<Tensor<1, dim>> neighbor_grad_p_values(fe_face_values.n_quadrature_points);
+                vector<double> face_perm_values(fe_face_values.n_quadrature_points);
+                const unsigned int neighbor_face = cell -> neighbor_of_neighbor(face_no);
+                fe_face_values.reinit(cell, face_no);
+                fe_face_values_neighbor.reinit(neighbor, neighbor_face);
+                fe_face_values.get_function_gradients(solution_pressure, face_grad_p_values);
+                fe_face_values_neighbor.get_function_gradients(solution_pressure,neighbor_grad_p_values);
+                permeability.value_list(fe_face_values.get_quadrature_points(), face_perm_values);
+                vector<Point<dim>> v_normal1 =fe_face_values.get_normal_vectors();
+                vector<Point<dim>> v_normal2 =fe_face_values_neighbor.get_normal_vectors();
+                for (unsigned int q = 0; q < fe_face_values.n_quadrature_points; q++){
+                    Tensor<1, dim> normal1, normal2;
+                    normal1[0]= v_normal1[q](0);
+                    normal1[1] = v_normal1[q](1);
+                    normal2[0]= v_normal2[q](0);
+                    normal2[1]= v_normal2[q](1);
+                    double jump = face_perm_values[q] * (face_grad_p_values[q]* normal1
+                            -  neighbor_grad_p_values[q] * normal2); 
+                    flux_jump += jump * jump * fe_face_values.JxW(q);
+                }
+
             }
+            
         }
     }
-    */
+    flux_jump = flux_jump * h *del_t;
+    cout << "flux_jump = " << flux_jump << endl;
+    eta_flow_m += flux_jump;
     a_posterior_indicators_table.add_value("time", t);
     a_posterior_indicators_table.add_value("eta_fs", eta_fs.back());
     a_posterior_indicators_table.add_value("eta_alg", eta_alg_m);
     a_posterior_indicators_table.add_value("eta_time", eta_time_m);
     a_posterior_indicators_table.add_value("eta_flow", eta_flow_m);
+    a_posterior_indicators_table.add_value("flux_jump", flux_jump);
 }

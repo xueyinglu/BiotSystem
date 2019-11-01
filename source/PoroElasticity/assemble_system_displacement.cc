@@ -3,7 +3,7 @@
 using namespace std;
 void BiotSystem::assemble_system_displacement()
 {
-    QGauss<dim> quadrature_formula(fe_displacement.degree + 2);
+    QGauss<dim> quadrature_formula(fe_displacement.degree + 1);
 
     FEValues<dim> fe_values(fe_displacement, quadrature_formula,
                             update_values | update_gradients |
@@ -53,6 +53,7 @@ void BiotSystem::assemble_system_displacement()
         mu.value_list(fe_values.get_quadrature_points(), mu_values);
         right_hand_side.vector_value_list(fe_values.get_quadrature_points(),
                                           rhs_values);
+        /*
         if (timestep == 0) // initialize u_0
         {
             initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
@@ -65,7 +66,9 @@ void BiotSystem::assemble_system_displacement()
         {
             fe_values_pressure.get_function_values(solution_pressure, pore_pressure_values);
         }
+        */
 
+        fe_values_pressure.get_function_values(solution_pressure, pore_pressure_values);
         /*
         for (unsigned int i = 0; i < dofs_per_cell; ++i)
         {
