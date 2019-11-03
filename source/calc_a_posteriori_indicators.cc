@@ -152,6 +152,13 @@ void BiotSystem::calc_a_posteriori_indicators()
     flux_jump = flux_jump * h *del_t;
     cout << "flux_jump = " << flux_jump << endl;
     eta_flow_m += flux_jump;
+    if (timestep == 1){
+        eta_flow.push_back(eta_flow_m);
+    }
+    else{
+        eta_flow_m += eta_flow.back();
+        eta_flow.push_back(eta_flow_m);
+    }
     a_posterior_indicators_table.add_value("time", t);
     a_posterior_indicators_table.add_value("eta_fs", eta_fs.back());
     a_posterior_indicators_table.add_value("eta_alg", eta_alg_m);

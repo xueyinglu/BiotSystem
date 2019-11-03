@@ -17,7 +17,7 @@ void BiotSystem::plot_error() const{
     data_out.add_data_vector(interpolated_exact_sol, "exact_sol");
     data_out.add_data_vector(error, "error_p");
     data_out.build_patches();
-    std::ofstream output("error-" + std::to_string(timestep) +".vtk");
+    std::ofstream output("output/error-" + std::to_string(timestep) +".vtk");
     data_out.write_vtk(output);
 }
 

@@ -9,15 +9,16 @@ class BiotSystem
 {
 public:
     BiotSystem();
+    BiotSystem(int _num_global_refinement, double _del_t, double _T);
     // virtual BiotSystem();
     void run_fixed_stress();
 
 private:
-    double del_t = 1e-4;
-    double T = 0.01;
+    double del_t = 0.01;
+    double T = 1;
     double t = 0;
     int timestep = 0;
-    int num_global_refinement = 4;
+    int num_global_refinement = 5;
     double h = 1./pow(2,num_global_refinement);
 
     Triangulation<dim> triangulation;

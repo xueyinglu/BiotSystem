@@ -3,8 +3,9 @@ int main()
 {
   try
   {
-    BiotSystem test;
-    test.run_fixed_stress();
+    // BiotSystem test;
+    BiotSystem convergence_test(4, 2.5e-4, 0.01);
+    convergence_test.run_fixed_stress();
   }
   catch (std::exception &exc)
   {
