@@ -7,9 +7,11 @@ inline Tensor<1, dim> DisplacementSolution::value(const Point<dim> &p) const
   double alpha = 0.75;
   double inv_M = 3. / 28;
   double PI = atan(1) * 4;
+  double tx = PI *p(0);
+  double ty = PI *p(1);
   double A = 2 * PI * PI * k / (alpha + inv_M);
-  return_tensor[0] = -exp(-A * t) / (2 * PI) * cos(PI * p[0]) * sin(PI * p[1]);
-  return_tensor[1] = -exp(-A * t) / (2 * PI) * sin(PI * p[0]) * cos(PI * p[1]);
+  return_tensor[0] = -exp(-A * t) / (2 * PI) * cos(tx) * sin(ty);
+  return_tensor[1] = -exp(-A * t) / (2 * PI) * sin(tx) * cos(ty);
   return return_tensor;
 }
 

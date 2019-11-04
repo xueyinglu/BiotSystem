@@ -12,6 +12,7 @@ public:
     BiotSystem(int _num_global_refinement, double _del_t, double _T);
     // virtual BiotSystem();
     void run_fixed_stress();
+    void check_disp_solver_convergence();
 
 private:
     double del_t = 0.01;

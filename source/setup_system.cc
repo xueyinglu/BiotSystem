@@ -14,6 +14,7 @@ void BiotSystem::setup_system()
     system_rhs_pressure.reinit(dof_handler_pressure.n_dofs());
 
     dof_handler_displacement.distribute_dofs(fe_displacement);
+    std::cout << "Number of degrees of freedom for displacement: " << dof_handler_displacement.n_dofs() << std::endl;
     hanging_node_constraints.clear();
     DoFTools::make_hanging_node_constraints(dof_handler_displacement,
                                             hanging_node_constraints);

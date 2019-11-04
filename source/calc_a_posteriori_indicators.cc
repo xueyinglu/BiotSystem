@@ -99,6 +99,7 @@ void BiotSystem::calc_a_posteriori_indicators()
     }
 
     eta_flow_m = eta_flow_m * h * h * del_t;
+    cout << "error_flow_m residual = " << eta_flow_m << endl;
     
     // jump of flux at cell boundaries.
     double flux_jump = 0;
@@ -150,7 +151,6 @@ void BiotSystem::calc_a_posteriori_indicators()
         }
     }
     flux_jump = flux_jump * h *del_t;
-    cout << "flux_jump = " << flux_jump << endl;
     eta_flow_m += flux_jump;
     if (timestep == 1){
         eta_flow.push_back(eta_flow_m);
