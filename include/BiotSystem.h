@@ -67,6 +67,12 @@ private:
     vector<double> eta_time;
     vector<double> eta_flow;
 
+    vector<double> eta_face_partial_sigma_n; // the errors on the tensor's time derivative for time step n
+    vector<double> eta_face_partial_sigma; // the (cumulative in time ) errors on the tensor's time derivative_form
+    vector<double> eta_partial_u_n; // the errors on the displacement's time derivative for time step n
+    vector<double> eta_partial_u; // the (cumulative in time) errors on the displacement's time derivative
+    vector<double> eta_face_sigma; //the errors on the tensor at final time
+    vector<double> eta_u; // the errors on the displacement at final time
     ConvergenceTable a_posterior_indicators_table;
 
 
@@ -90,7 +96,8 @@ private:
     void process_solution(int fs_count); // compute the errors
     void plot_error() const;
 
-    void calc_a_posteriori_indicators();
+    void calc_a_posteriori_indicators_p();
+    void calc_a_posteriori_indicators_u();
 
 };
 
