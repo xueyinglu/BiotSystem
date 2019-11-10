@@ -5,8 +5,9 @@ using namespace std;
 void BiotSystem::calc_a_posteriori_indicators_u()
 {
 
-    /* calculate eta_face_partial_sigma_n */
-    double eta_face_partial_sigma_t = 0;
+    /* calculate eta_face_partial_sigma_n, eta_face_partial_sigma, eta_face_sigma_n, eta_face_sigma */
+    double eta_e_partial_sigma = 0;
+    double eta_e_sigma = 0;
     QGauss<dim - 1> face_quadrature(fe_pressure.degree + 1);
     // const unsigned int n_face_q_points = face_quadrature.size();
     FEFaceValues<dim> fe_face_p(fe_pressure, face_quadrature,
@@ -84,24 +85,36 @@ void BiotSystem::calc_a_posteriori_indicators_u()
                     normal2[0] = v_normal2[q](0);
                     normal2[1] = v_normal2[q](1);
 
-                    Tensor<1, dim> dum = (face_sigma + biot_alpha * (face_p_values[q] - prev_timestep_face_p_values[q]) * identity) * normal1 
-                                        - (neighbor_sigma + biot_alpha * (neighbor_p_values[q] - prev_timestep_neighbor_p_values[q]) * identity) * normal2;
-                    eta_face_partial_sigma_t += dum.norm_square() * fe_face_p.JxW(q);
+                    Tensor<1, dim> dum = (face_sigma + biot_alpha * (face_p_values[q] - prev_timestep_face_p_values[q]) * identity) * normal1 - (neighbor_sigma + biot_alpha * (neighbor_p_values[q] - prev_timestep_neighbor_p_values[q]) * identity) * normal2;
+                    eta_e_partial_sigma += dum.norm_square() * fe_face_p.JxW(q);
+
+                    face_grad_u = Tensors::get_grad_u<dim>(q, face_grad_u_values);
+                    face_E = 0.5 * (face_grad_u + transpose(face_grad_u));
+                    face_sigma = 2 * mu_values[q] * face_E + lambda_values[q] * trace(face_E) * identity;
+
+                    neighbor_grad_u = Tensors::get_grad_u<dim>(q, neighbor_grad_u_values);
+                    neighbor_E = 0.5 * (neighbor_grad_u + transpose(neighbor_grad_u));
+                    neighbor_sigma = 2 * mu_values[q] * neighbor_E + lambda_values[q] * trace(neighbor_E) * identity;
+                    Tensor<1, dim> dum6 = (face_sigma + biot_alpha * face_p_values[q] * identity) * normal1 - (neighbor_sigma + biot_alpha * neighbor_p_values[q] * identity) * normal2;
+                    eta_e_sigma += dum6.norm_square() * fe_face_p.JxW(q);
                 }
             }
         }
     }
 
-    eta_face_partial_sigma_t = sqrt(h * eta_face_partial_sigma_t);
+    eta_e_sigma *= h;
     if (timestep == 1)
     {
-        eta_face_sigma.push_back(eta_face_partial_sigma_t * eta_face_partial_sigma_t);
+        eta_face_sigma.push_back(eta_e_sigma);
     }
     else
     {
-        eta_face_sigma.push_back(eta_face_partial_sigma_n.back() * eta_face_partial_sigma_n.back() + eta_face_partial_sigma_t * eta_face_partial_sigma_t);
+        eta_face_sigma.push_back(eta_face_sigma_n.back() + eta_e_sigma);
     }
-    eta_face_partial_sigma_n.push_back(eta_face_partial_sigma_t);
+
+    eta_face_sigma_n.push_back(eta_e_sigma);
+    eta_e_partial_sigma = sqrt(h * eta_e_partial_sigma);
+    eta_face_partial_sigma_n.push_back(eta_e_partial_sigma);
     double dum2 = 0;
     for (auto &n : eta_face_partial_sigma_n)
     {
@@ -123,15 +136,16 @@ void BiotSystem::calc_a_posteriori_indicators_u()
     const unsigned int n_q_points = quadrature.size();
     vector<Tensor<1, dim>> grad_p_values(n_q_points);
     vector<Tensor<1, dim>> prev_timestep_grad_p_values(n_q_points);
-    vector<vector<Tensor<2,dim>>> hessian_u_values(n_q_points, vector<Tensor<2,dim>>(dim));
-    vector<vector<Tensor<2,dim>>> prev_timestep_hessian_u_values(n_q_points, vector<Tensor<2,dim>>(dim));
+    vector<vector<Tensor<2, dim>>> hessian_u_values(n_q_points, vector<Tensor<2, dim>>(dim));
+    vector<vector<Tensor<2, dim>>> prev_timestep_hessian_u_values(n_q_points, vector<Tensor<2, dim>>(dim));
 
     vector<double> lambda_values(n_q_points);
     vector<double> mu_values(n_q_points);
-    
+
     double eta_E_partial_u = 0;
     double eta_E_u = 0;
-    for(; cell != endc; ++cell, cell_u){
+    for (; cell != endc; ++cell, ++cell_u)
+    {
         fe_value_pressure.reinit(cell);
         fe_value_displacement.reinit(cell_u);
 
@@ -143,46 +157,37 @@ void BiotSystem::calc_a_posteriori_indicators_u()
 
         lambda.value_list(fe_value_displacement.get_quadrature_points(), lambda_values);
         mu.value_list(fe_value_displacement.get_quadrature_points(), mu_values);
-        for (unsigned int q = 0; q < n_q_points; q++){
-            Tensor<1,dim> dum3;
-            dum3[0] = (2*mu_values[q]+lambda_values[q]) * (hessian_u_values[q][0][0][0]  - prev_timestep_hessian_u_values[q][0][0][0])
-                    + (lambda_values[q] + 1) * (hessian_u_values[q][1][0][1] - prev_timestep_hessian_u_values[q][1][0][1])
-                    + (hessian_u_values[q][0][1][1] - prev_timestep_hessian_u_values[q][0][1][1])
-                    - biot_alpha * (grad_p_values[q][0] - prev_timestep_grad_p_values[q][0]);
-            dum3[1] =(2*mu_values[q]+lambda_values[q]) * (hessian_u_values[q][1][1][1]  - prev_timestep_hessian_u_values[q][1][1][1])
-                    + (lambda_values[q] + 1) * (hessian_u_values[q][0][0][1] - prev_timestep_hessian_u_values[q][0][0][1])
-                    + (hessian_u_values[q][1][0][0] - prev_timestep_hessian_u_values[q][1][0][0])
-                    - biot_alpha * (grad_p_values[q][1] - prev_timestep_grad_p_values[q][1]); 
-            
+        for (unsigned int q = 0; q < n_q_points; q++)
+        {
+            Tensor<1, dim> dum3;
+            dum3[0] = (2 * mu_values[q] + lambda_values[q]) * (hessian_u_values[q][0][0][0] - prev_timestep_hessian_u_values[q][0][0][0]) + (lambda_values[q] + 1) * (hessian_u_values[q][1][0][1] - prev_timestep_hessian_u_values[q][1][0][1]) + (hessian_u_values[q][0][1][1] - prev_timestep_hessian_u_values[q][0][1][1]) - biot_alpha * (grad_p_values[q][0] - prev_timestep_grad_p_values[q][0]);
+            dum3[1] = (2 * mu_values[q] + lambda_values[q]) * (hessian_u_values[q][1][1][1] - prev_timestep_hessian_u_values[q][1][1][1]) + (lambda_values[q] + 1) * (hessian_u_values[q][0][0][1] - prev_timestep_hessian_u_values[q][0][0][1]) + (hessian_u_values[q][1][0][0] - prev_timestep_hessian_u_values[q][1][0][0]) - biot_alpha * (grad_p_values[q][1] - prev_timestep_grad_p_values[q][1]);
+
             eta_E_partial_u += dum3.norm_square() * fe_value_displacement.JxW(q);
 
             Tensor<1, dim> dum5;
-                       dum5[0] = (2*mu_values[q]+lambda_values[q]) * hessian_u_values[q][0][0][0]  
-                    + (lambda_values[q] + 1) * hessian_u_values[q][1][0][1] 
-                    + hessian_u_values[q][0][1][1] 
-                    - biot_alpha * grad_p_values[q][0] ; 
-                    dum5[1] =(2*mu_values[q]+lambda_values[q]) * hessian_u_values[q][1][1][1]  
-                    + (lambda_values[q] + 1) * hessian_u_values[q][0][0][1] 
-                    + hessian_u_values[q][1][0][0] 
-                    - biot_alpha * grad_p_values[q][1] ;
+            dum5[0] = (2 * mu_values[q] + lambda_values[q]) * hessian_u_values[q][0][0][0] + (lambda_values[q] + 1) * hessian_u_values[q][1][0][1] + hessian_u_values[q][0][1][1] - biot_alpha * grad_p_values[q][0];
+            dum5[1] = (2 * mu_values[q] + lambda_values[q]) * hessian_u_values[q][1][1][1] + (lambda_values[q] + 1) * hessian_u_values[q][0][0][1] + hessian_u_values[q][1][0][0] - biot_alpha * grad_p_values[q][1];
             eta_E_u += dum5.norm_square() + fe_value_displacement.JxW(q);
-                     }
+        }
     }
-    eta_E_partial_u = sqrt(eta_E_partial_u)* h ;
+    eta_E_partial_u = sqrt(eta_E_partial_u) * h;
     eta_partial_u_n.push_back(eta_E_partial_u);
 
-    double dum4;
-    for (auto &n : eta_partial_u_n){
+    double dum4 = 0;
+    for (auto &n : eta_partial_u_n)
+    {
         dum4 += n;
     }
-    eta_partial_u.push_back(dum4*dum4);
-    eta_E_u = sqrt(eta_E_u) *h;
-    if (timestep == 1){
-        eta_u.push_back(eta_E_u * eta_E_u);
+    eta_partial_u.push_back(dum4 * dum4);
+    eta_E_u = eta_E_u * h * h;
+    if (timestep == 1)
+    {
+        eta_u.push_back(eta_E_u);
     }
-    else{
-        eta_u.push_back(eta_u_n.back() * eta_u_n.back() + eta_E_u * eta_E_u );
+    else
+    {
+        eta_u.push_back(eta_u_n.back() + eta_E_u);
     }
     eta_u_n.push_back(eta_E_u);
-
 }
