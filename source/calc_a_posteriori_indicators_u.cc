@@ -108,4 +108,81 @@ void BiotSystem::calc_a_posteriori_indicators_u()
         dum2 += n;
     }
     eta_face_partial_sigma.push_back(dum2 * dum2);
+
+    /* calculate eta_partial_u_n, eta_partial_u, eta_u */
+
+    QGauss<dim> quadrature(fe_pressure.degree + 1);
+    FEValues<dim> fe_value_pressure(fe_pressure, quadrature,
+                                    update_values | update_quadrature_points | update_gradients | update_hessians | update_JxW_values);
+    FEValues<dim> fe_value_displacement(fe_displacement, quadrature,
+                                        update_values | update_quadrature_points | update_gradients | update_hessians | update_JxW_values);
+    cell = dof_handler_pressure.begin_active();
+
+    cell_u = dof_handler_displacement.begin_active();
+
+    const unsigned int n_q_points = quadrature.size();
+    vector<Tensor<1, dim>> grad_p_values(n_q_points);
+    vector<Tensor<1, dim>> prev_timestep_grad_p_values(n_q_points);
+    vector<vector<Tensor<2,dim>>> hessian_u_values(n_q_points, vector<Tensor<2,dim>>(dim));
+    vector<vector<Tensor<2,dim>>> prev_timestep_hessian_u_values(n_q_points, vector<Tensor<2,dim>>(dim));
+
+    vector<double> lambda_values(n_q_points);
+    vector<double> mu_values(n_q_points);
+    
+    double eta_E_partial_u = 0;
+    double eta_E_u = 0;
+    for(; cell != endc; ++cell, cell_u){
+        fe_value_pressure.reinit(cell);
+        fe_value_displacement.reinit(cell_u);
+
+        fe_value_pressure.get_function_gradients(solution_pressure, grad_p_values);
+        fe_value_pressure.get_function_gradients(prev_timestep_sol_pressure, prev_timestep_grad_p_values);
+
+        fe_value_displacement.get_function_hessians(solution_displacement, hessian_u_values);
+        fe_value_displacement.get_function_hessians(prev_timestep_sol_displacement, prev_timestep_hessian_u_values);
+
+        lambda.value_list(fe_value_displacement.get_quadrature_points(), lambda_values);
+        mu.value_list(fe_value_displacement.get_quadrature_points(), mu_values);
+        for (unsigned int q = 0; q < n_q_points; q++){
+            Tensor<1,dim> dum3;
+            dum3[0] = (2*mu_values[q]+lambda_values[q]) * (hessian_u_values[q][0][0][0]  - prev_timestep_hessian_u_values[q][0][0][0])
+                    + (lambda_values[q] + 1) * (hessian_u_values[q][1][0][1] - prev_timestep_hessian_u_values[q][1][0][1])
+                    + (hessian_u_values[q][0][1][1] - prev_timestep_hessian_u_values[q][0][1][1])
+                    - biot_alpha * (grad_p_values[q][0] - prev_timestep_grad_p_values[q][0]);
+            dum3[1] =(2*mu_values[q]+lambda_values[q]) * (hessian_u_values[q][1][1][1]  - prev_timestep_hessian_u_values[q][1][1][1])
+                    + (lambda_values[q] + 1) * (hessian_u_values[q][0][0][1] - prev_timestep_hessian_u_values[q][0][0][1])
+                    + (hessian_u_values[q][1][0][0] - prev_timestep_hessian_u_values[q][1][0][0])
+                    - biot_alpha * (grad_p_values[q][1] - prev_timestep_grad_p_values[q][1]); 
+            
+            eta_E_partial_u += dum3.norm_square() * fe_value_displacement.JxW(q);
+
+            Tensor<1, dim> dum5;
+                       dum5[0] = (2*mu_values[q]+lambda_values[q]) * hessian_u_values[q][0][0][0]  
+                    + (lambda_values[q] + 1) * hessian_u_values[q][1][0][1] 
+                    + hessian_u_values[q][0][1][1] 
+                    - biot_alpha * grad_p_values[q][0] ; 
+                    dum5[1] =(2*mu_values[q]+lambda_values[q]) * hessian_u_values[q][1][1][1]  
+                    + (lambda_values[q] + 1) * hessian_u_values[q][0][0][1] 
+                    + hessian_u_values[q][1][0][0] 
+                    - biot_alpha * grad_p_values[q][1] ;
+            eta_E_u += dum5.norm_square() + fe_value_displacement.JxW(q);
+                     }
+    }
+    eta_E_partial_u = sqrt(eta_E_partial_u)* h ;
+    eta_partial_u_n.push_back(eta_E_partial_u);
+
+    double dum4;
+    for (auto &n : eta_partial_u_n){
+        dum4 += n;
+    }
+    eta_partial_u.push_back(dum4*dum4);
+    eta_E_u = sqrt(eta_E_u) *h;
+    if (timestep == 1){
+        eta_u.push_back(eta_E_u * eta_E_u);
+    }
+    else{
+        eta_u.push_back(eta_u_n.back() * eta_u_n.back() + eta_E_u * eta_E_u );
+    }
+    eta_u_n.push_back(eta_E_u);
+
 }

@@ -47,7 +47,7 @@ private:
     // Data
     double mu_f = 1; // fluid viscosity
     RightHandSide right_hand_side; // mechanics equation body force
-    //InitialPressure initial_pressure;
+    InitialPressure initial_pressure;
     ConstantFunction<dim> permeability;
     ConstantFunction<dim> lambda, mu;
     // coupling
@@ -72,6 +72,7 @@ private:
     vector<double> eta_partial_u_n; // the errors on the displacement's time derivative for time step n
     vector<double> eta_partial_u; // the (cumulative in time) errors on the displacement's time derivative
     vector<double> eta_face_sigma; //the errors on the tensor at final time
+    vector<double> eta_u_n; // the errors on the displacement at time t_n; 
     vector<double> eta_u; // the errors on the displacement at final time
     ConvergenceTable a_posterior_indicators_table;
 

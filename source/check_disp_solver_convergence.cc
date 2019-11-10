@@ -46,7 +46,7 @@ void BiotSystem::check_disp_solver_convergence()
                 sol[0] = sol_u_values[q][0];
                 sol[1] = sol_u_values[q][1];
                 Tensor<1, dim> cell_difference = sol - ana_u_values[q];
-                L2_norm_displacement += cell_difference* cell_difference * fe_value_displacement.JxW(q);
+                L2_norm_displacement += cell_difference.norm_square()* fe_value_displacement.JxW(q);
             }
         }
         L2_norm_displacement = sqrt(L2_norm_displacement);
