@@ -29,17 +29,18 @@ void BiotSystem::calc_a_posteriori_indicators_u()
     {
         for (unsigned int face_no = 0; face_no < GeometryInfo<dim>::faces_per_cell; ++face_no)
         {
-            const auto face_p = cell->neighbor(face_no);
-            const auto face_u = cell_u->neighbor(face_no);
+            typename DoFHandler<dim>::face_iterator face_p = cell->face(face_no);
+            typename DoFHandler<dim>::face_iterator face_u = cell_u->face(face_no);
             if (!face_p->at_boundary())
+            //if (! cell -> at_boundary(face_no))
             {
                 Assert(cell->neighbor(face_no).state() == IteratorState::valid, ExcInternalError());
-                const auto neighbor_p = cell->neighbor(face_no);
-                const auto neighbor_u = cell_u->neighbor(face_no);
-                vector<vector<Tensor<1, dim>>> face_grad_u_values(fe_face_u.n_quadrature_points);
-                vector<vector<Tensor<1, dim>>> neighbor_grad_u_values(fe_face_u.n_quadrature_points);
-                vector<vector<Tensor<1, dim>>> prev_timestep_face_grad_u_values(fe_face_u.n_quadrature_points);
-                vector<vector<Tensor<1, dim>>> prev_timestep_neighbor_grad_u_values(fe_face_u.n_quadrature_points);
+                const typename DoFHandler<dim>::cell_iterator neighbor_p = cell->neighbor(face_no);
+                const typename DoFHandler<dim>::cell_iterator neighbor_u = cell_u->neighbor(face_no);
+                vector<vector<Tensor<1, dim>>> face_grad_u_values(fe_face_u.n_quadrature_points, vector<Tensor<1,dim>>(dim));
+                vector<vector<Tensor<1, dim>>> neighbor_grad_u_values(fe_face_u.n_quadrature_points, vector<Tensor<1,dim>>(dim));
+                vector<vector<Tensor<1, dim>>> prev_timestep_face_grad_u_values(fe_face_u.n_quadrature_points, vector<Tensor<1,dim>>(dim));
+                vector<vector<Tensor<1, dim>>> prev_timestep_neighbor_grad_u_values(fe_face_u.n_quadrature_points, vector<Tensor<1,dim>>(dim));
                 vector<double> face_p_values(fe_face_p.n_quadrature_points);
                 vector<double> neighbor_p_values(fe_face_p.n_quadrature_points);
                 vector<double> prev_timestep_face_p_values(fe_face_p.n_quadrature_points);
@@ -53,7 +54,6 @@ void BiotSystem::calc_a_posteriori_indicators_u()
                 fe_face_neighbor_p.reinit(neighbor_p, neighbor_face_p);
                 fe_face_u.reinit(cell_u, face_no);
                 fe_face_neighbor_u.reinit(neighbor_u, neighbor_face_u);
-
                 fe_face_p.get_function_values(solution_pressure, face_p_values);
                 fe_face_p.get_function_values(prev_timestep_sol_pressure, prev_timestep_face_p_values);
                 fe_face_neighbor_p.get_function_values(solution_pressure, neighbor_p_values);
@@ -61,14 +61,13 @@ void BiotSystem::calc_a_posteriori_indicators_u()
 
                 fe_face_u.get_function_gradients(solution_displacement, face_grad_u_values);
                 fe_face_u.get_function_gradients(prev_timestep_sol_displacement, prev_timestep_face_grad_u_values);
-                fe_face_neighbor_u.get_function_gradients(solution_pressure, neighbor_grad_u_values);
+                fe_face_neighbor_u.get_function_gradients(solution_displacement, neighbor_grad_u_values);
                 fe_face_neighbor_u.get_function_gradients(prev_timestep_sol_displacement, prev_timestep_neighbor_grad_u_values);
 
                 lambda.value_list(fe_face_p.get_quadrature_points(), lambda_values);
                 mu.value_list(fe_face_p.get_quadrature_points(), mu_values);
                 vector<Point<dim>> v_normal1 = fe_face_p.get_normal_vectors();
                 vector<Point<dim>> v_normal2 = fe_face_neighbor_p.get_normal_vectors();
-
                 for (unsigned int q = 0; q < fe_face_p.n_quadrature_points; q++)
                 {
                     Tensor<2, dim> face_grad_u = Tensors::get_grad_u<dim>(q, face_grad_u_values) - Tensors::get_grad_u<dim>(q, prev_timestep_face_grad_u_values);
@@ -102,6 +101,15 @@ void BiotSystem::calc_a_posteriori_indicators_u()
         }
     }
 
+    eta_e_partial_sigma = sqrt(h * eta_e_partial_sigma);
+    eta_face_partial_sigma_n.push_back(eta_e_partial_sigma);
+    double dum2 = 0;
+    for (auto &n : eta_face_partial_sigma_n)
+    {
+        dum2 += n;
+    }
+    eta_face_partial_sigma.push_back(dum2 * dum2);
+
     eta_e_sigma *= h;
     if (timestep == 1)
     {
@@ -111,16 +119,7 @@ void BiotSystem::calc_a_posteriori_indicators_u()
     {
         eta_face_sigma.push_back(eta_face_sigma_n.back() + eta_e_sigma);
     }
-
     eta_face_sigma_n.push_back(eta_e_sigma);
-    eta_e_partial_sigma = sqrt(h * eta_e_partial_sigma);
-    eta_face_partial_sigma_n.push_back(eta_e_partial_sigma);
-    double dum2 = 0;
-    for (auto &n : eta_face_partial_sigma_n)
-    {
-        dum2 += n;
-    }
-    eta_face_partial_sigma.push_back(dum2 * dum2);
 
     /* calculate eta_partial_u_n, eta_partial_u, eta_u */
 
@@ -168,18 +167,19 @@ void BiotSystem::calc_a_posteriori_indicators_u()
             Tensor<1, dim> dum5;
             dum5[0] = (2 * mu_values[q] + lambda_values[q]) * hessian_u_values[q][0][0][0] + (lambda_values[q] + 1) * hessian_u_values[q][1][0][1] + hessian_u_values[q][0][1][1] - biot_alpha * grad_p_values[q][0];
             dum5[1] = (2 * mu_values[q] + lambda_values[q]) * hessian_u_values[q][1][1][1] + (lambda_values[q] + 1) * hessian_u_values[q][0][0][1] + hessian_u_values[q][1][0][0] - biot_alpha * grad_p_values[q][1];
-            eta_E_u += dum5.norm_square() + fe_value_displacement.JxW(q);
+            eta_E_u += dum5.norm_square() * fe_value_displacement.JxW(q);
         }
     }
+
     eta_E_partial_u = sqrt(eta_E_partial_u) * h;
     eta_partial_u_n.push_back(eta_E_partial_u);
-
     double dum4 = 0;
     for (auto &n : eta_partial_u_n)
     {
         dum4 += n;
     }
     eta_partial_u.push_back(dum4 * dum4);
+    
     eta_E_u = eta_E_u * h * h;
     if (timestep == 1)
     {
@@ -190,4 +190,9 @@ void BiotSystem::calc_a_posteriori_indicators_u()
         eta_u.push_back(eta_u_n.back() + eta_E_u);
     }
     eta_u_n.push_back(eta_E_u);
+
+    a_posterior_indicators_table.add_value("eta_face_partial_sigma", eta_face_partial_sigma.back());
+    a_posterior_indicators_table.add_value("eta_face_sigma", eta_face_sigma.back());
+    a_posterior_indicators_table.add_value("eta_partial_u", eta_partial_u.back());
+    a_posterior_indicators_table.add_value("eta_u", eta_u.back());
 }

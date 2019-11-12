@@ -3,19 +3,17 @@ using namespace std;
 void BiotSystem::calc_a_posteriori_indicators_p()
 {
     /* calculate eta_alg */
-    double eta_alg_m;
     double dum1 = 0;
     double dum2 = 0;
-    for (vector<double>::iterator it = eta_fs.begin(); it != eta_fs.end(); it++)
+    for (auto &n : eta_fs)
     {
-        dum1 += *it;
-        dum2 += ((*it) * (*it));
+        dum1 += n;
+        dum2 += n*n;
     }
-    eta_alg_m = del_t * dum1 * dum1 + h * h * dum2;
-    eta_alg.push_back(eta_alg_m);
+    eta_alg.push_back(del_t * dum1 * dum1 + h * h * dum2);
 
     /* calculate eta_time */
-    double eta_t_p_n = 0; //eta_t_p_n^2
+    double eta_t_p_n = 0; // = Del_t /3 * \| k^{1/2} \nabla (p_h^{n,l} - p_h^{n-1})\|_{L2(\Omega)}
     QGauss<dim> quadrature_pressure(fe_pressure.degree + 1);
     FEValues<dim> fe_value_pressure(fe_pressure, quadrature_pressure,
                                     update_values | update_quadrature_points | update_gradients | update_hessians | update_JxW_values);
@@ -47,22 +45,19 @@ void BiotSystem::calc_a_posteriori_indicators_p()
         }
     }
     eta_t_p_n = eta_t_p_n * del_t / 3;
-    cout << "eta_t_p_n squared = " << eta_t_p_n << endl;
-    double eta_time_m;
     if (timestep == 1)
     {
-        eta_time_m = eta_t_p_n;
-        eta_time.push_back(eta_time_m);
+        eta_time.push_back(eta_t_p_n);
     }
     else
     {
-        eta_time_m = eta_time.back() + eta_t_p_n;
-        eta_time.push_back(eta_time_m);
+        eta_time.push_back(eta_time.back() + eta_t_p_n);
     }
 
-    /* calculate eta_flow */
+    /* calculate eta_p_residual, eta_flux_jump, eta_flow */
 
-    double eta_flow_m = 0;
+    double eta_flow_n = 0;
+    double eta_E_p = 0;
     // residual at cells
     QGauss<dim> quadrature_displacement(fe_displacement.degree + 1);
     FEValues<dim> fe_value_displacement(fe_displacement, quadrature_displacement,
@@ -94,15 +89,16 @@ void BiotSystem::calc_a_posteriori_indicators_p()
                                 - biot_alpha / del_t * (grad_u_values[q][0][0] + grad_u_values[q][1][1] 
                                 - prev_timestep_grad_u_values[q][0][0] - prev_timestep_grad_u_values[q][1][1]);
             // cout << "cell residual = " << cell_residual << endl;
-            eta_flow_m += cell_residual * cell_residual * fe_value_pressure.JxW(q);
+            eta_E_p += cell_residual * cell_residual * fe_value_pressure.JxW(q);
         }
     }
 
-    eta_flow_m = eta_flow_m * h * h * del_t;
-    cout << "error_flow_m residual = " << eta_flow_m << endl;
+    eta_E_p = eta_E_p * h * h * del_t;
+    eta_p_residual.push_back(eta_E_p);
+    cout << "error_E_p = " << eta_E_p << endl;
     
     // jump of flux at cell boundaries.
-    double flux_jump = 0;
+    double eta_flux_e = 0;
     QGauss<dim-1> face_quadrature(fe_pressure.degree + 1);
     // const unsigned int n_face_q_points = face_quadrature.size();
     FEFaceValues<dim> fe_face_values(fe_pressure, face_quadrature,
@@ -141,23 +137,24 @@ void BiotSystem::calc_a_posteriori_indicators_p()
                     normal1[1] = v_normal1[q](1);
                     normal2[0]= v_normal2[q](0);
                     normal2[1]= v_normal2[q](1);
+                    // TODO: extension to when permeability changes over the face
                     double jump = face_perm_values[q] * (face_grad_p_values[q]* normal1
                             -  neighbor_grad_p_values[q] * normal2); 
-                    flux_jump += jump * jump * fe_face_values.JxW(q);
+                    eta_flux_e += jump * jump * fe_face_values.JxW(q);
                 }
 
             }
             
         }
     }
-    flux_jump = flux_jump * h *del_t;
-    eta_flow_m += flux_jump;
+    eta_flux_e = eta_flux_e * h *del_t;
+    eta_flux_jump.push_back(eta_flux_e);
+    eta_flow_n = eta_E_p + eta_flux_e;
     if (timestep == 1){
-        eta_flow.push_back(eta_flow_m);
+        eta_flow.push_back(eta_flow_n);
     }
     else{
-        eta_flow_m += eta_flow.back();
-        eta_flow.push_back(eta_flow_m);
+        eta_flow.push_back(eta_flow.back()+ eta_flow_n);
     }
 
 
@@ -165,8 +162,9 @@ void BiotSystem::calc_a_posteriori_indicators_p()
 
     a_posterior_indicators_table.add_value("time", t);
     a_posterior_indicators_table.add_value("eta_fs", eta_fs.back());
-    a_posterior_indicators_table.add_value("eta_alg", eta_alg_m);
-    a_posterior_indicators_table.add_value("eta_time", eta_time_m);
-    a_posterior_indicators_table.add_value("eta_flow", eta_flow_m);
-    a_posterior_indicators_table.add_value("flux_jump", flux_jump);
+    a_posterior_indicators_table.add_value("eta_alg", eta_alg.back());
+    a_posterior_indicators_table.add_value("eta_time", eta_time.back());
+    a_posterior_indicators_table.add_value("eta_flow", eta_flow.back());
+    a_posterior_indicators_table.add_value("eta_p_residual", eta_p_residual.back());
+    a_posterior_indicators_table.add_value("eta_flux_jump", eta_flux_jump.back());
 }
