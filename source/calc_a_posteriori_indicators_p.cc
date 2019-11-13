@@ -116,8 +116,7 @@ void BiotSystem::calc_a_posteriori_indicators_p()
                                     | update_gradients | update_quadrature_points
                                     | update_JxW_values);
     FEFaceValues<dim> fe_face_values_neighbor(fe_pressure, face_quadrature,
-                                    update_values | update_normal_vectors
-                                    | update_gradients | update_quadrature_points
+                                    update_values | update_gradients | update_quadrature_points
                                     | update_JxW_values);
     
     
@@ -139,17 +138,13 @@ void BiotSystem::calc_a_posteriori_indicators_p()
                 fe_face_values.get_function_gradients(solution_pressure, face_grad_p_values);
                 fe_face_values_neighbor.get_function_gradients(solution_pressure,neighbor_grad_p_values);
                 permeability.value_list(fe_face_values.get_quadrature_points(), face_perm_values);
-                vector<Point<dim>> v_normal1 =fe_face_values.get_normal_vectors();
-                vector<Point<dim>> v_normal2 =fe_face_values_neighbor.get_normal_vectors();
+                // vector<Point<dim>> v_normal1 =fe_face_values.get_normal_vectors();
+                // vector<Point<dim>> v_normal2 =fe_face_values_neighbor.get_normal_vectors();
                 for (unsigned int q = 0; q < fe_face_values.n_quadrature_points; q++){
-                    Tensor<1, dim> normal1, normal2;
-                    normal1[0]= v_normal1[q](0);
-                    normal1[1] = v_normal1[q](1);
-                    normal2[0]= v_normal2[q](0);
-                    normal2[1]= v_normal2[q](1);
+                    const Tensor<1, dim> & n = fe_face_values.normal_vector(q);
                     // TODO: extension to when permeability changes over the face
-                    double jump = face_perm_values[q] * (face_grad_p_values[q]* normal1
-                            -  neighbor_grad_p_values[q] * normal2); 
+                    double jump = face_perm_values[q] * (face_grad_p_values[q]* n
+                            -  neighbor_grad_p_values[q] * n); 
                     eta_flux_e += jump * jump * fe_face_values.JxW(q);
                 }
 
