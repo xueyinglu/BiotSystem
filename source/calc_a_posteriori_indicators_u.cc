@@ -191,8 +191,9 @@ void BiotSystem::calc_a_posteriori_indicators_u()
     }
     eta_u_n.push_back(eta_E_u);
 
-    a_posterior_indicators_table.add_value("eta_face_partial_sigma", eta_face_partial_sigma.back());
-    a_posterior_indicators_table.add_value("eta_face_sigma", eta_face_sigma.back());
-    a_posterior_indicators_table.add_value("eta_partial_u", eta_partial_u.back());
-    a_posterior_indicators_table.add_value("eta_u", eta_u.back());
+    u_indicators_table.add_value("time", t);
+    u_indicators_table.add_value("eta_face_partial_sigma", eta_face_partial_sigma.back());
+    u_indicators_table.add_value("eta_face_sigma", eta_face_sigma.back());
+    u_indicators_table.add_value("eta_partial_u", eta_partial_u.back());
+    u_indicators_table.add_value("eta_u", eta_u.back());
 }

@@ -61,6 +61,10 @@ private:
     Vector<double> prev_fs_sol_pressure;
     Vector<double> prev_fs_sol_displacement;
 
+    /* element-wise a posteriori error indicators*/
+    DoFHandler<dim> dof_handler_output;
+    FESystem<dim> fe_output;
+    Vector<double> cell_eta_time;
     /* global a posteriori error estimators (recorded for each time step) */
     vector<double> eta_fs;
     vector<double> eta_alg;
@@ -77,7 +81,8 @@ private:
     vector<double> eta_face_sigma; //the errors on the tensor at final time
     vector<double> eta_u_n; // the errors on the displacement at time t_n; 
     vector<double> eta_u; // the errors on the displacement at final time
-    ConvergenceTable a_posterior_indicators_table;
+    ConvergenceTable p_indicators_table;
+    ConvergenceTable u_indicators_table;
 
 
     void make_grid();

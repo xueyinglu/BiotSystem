@@ -1,5 +1,8 @@
 #include "BiotSystem.h"
+#include <fstream>
+#include <iostream>
 using namespace std;
+
 void BiotSystem::calc_a_posteriori_indicators_p()
 {
     /* calculate eta_alg */
@@ -19,14 +22,19 @@ void BiotSystem::calc_a_posteriori_indicators_p()
                                     update_values | update_quadrature_points | update_gradients | update_hessians | update_JxW_values);
     typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_pressure.begin_active(),
                                                    endc = dof_handler_pressure.end();
+    typename DoFHandler<dim>::active_cell_iterator cell_output = dof_handler_output.begin_active();
     const unsigned int n_q_points = quadrature_pressure.size();
     vector<Tensor<1, dim>> grad_p_values(n_q_points);
     vector<Tensor<1, dim>> prev_timestep_grad_p_values(n_q_points);
     vector<double> permeability_values(n_q_points);
-    for (; cell != endc; ++cell)
+
+    vector<types::global_dof_index> output_dofs(dof_handler_output.get_fe().dofs_per_cell);
+    cell_eta_time = 0;
+    for (; cell != endc; ++cell, ++ cell_output)
     {
         fe_value_pressure.reinit(cell);
         fe_value_pressure.get_function_gradients(solution_pressure, grad_p_values);
+        cell_output -> get_dof_indices(output_dofs);
         //if (timestep == 1)
         //{
         //    initial_pressure.grad_list(fe_value_pressure.get_quadrature_points(), prev_timestep_grad_p_values);
@@ -42,6 +50,9 @@ void BiotSystem::calc_a_posteriori_indicators_p()
             eta_t_p_n += permeability_values[q] *
                          cell_difference.norm_square() *
                          fe_value_pressure.JxW(q);
+            cell_eta_time[output_dofs[0]]+=permeability_values[q] *
+                         cell_difference.norm_square() *
+                         fe_value_pressure.JxW(q); 
         }
     }
     eta_t_p_n = eta_t_p_n * del_t / 3;
@@ -95,7 +106,6 @@ void BiotSystem::calc_a_posteriori_indicators_p()
 
     eta_E_p = eta_E_p * h * h * del_t;
     eta_p_residual.push_back(eta_E_p);
-    cout << "error_E_p = " << eta_E_p << endl;
     
     // jump of flux at cell boundaries.
     double eta_flux_e = 0;
@@ -157,14 +167,19 @@ void BiotSystem::calc_a_posteriori_indicators_p()
         eta_flow.push_back(eta_flow.back()+ eta_flow_n);
     }
 
+    DataOut<dim> data_out;
+    data_out.attach_dof_handler(dof_handler_output);
+    data_out.add_data_vector(cell_eta_time, "eta_time", DataOut<dim>::type_dof_data);
+    data_out.build_patches();
+    ofstream output("indicators"+to_string(timestep)+".vtk");
+    data_out.write_vtk(output);
 
 
-
-    a_posterior_indicators_table.add_value("time", t);
-    a_posterior_indicators_table.add_value("eta_fs", eta_fs.back());
-    a_posterior_indicators_table.add_value("eta_alg", eta_alg.back());
-    a_posterior_indicators_table.add_value("eta_time", eta_time.back());
-    a_posterior_indicators_table.add_value("eta_flow", eta_flow.back());
-    a_posterior_indicators_table.add_value("eta_p_residual", eta_p_residual.back());
-    a_posterior_indicators_table.add_value("eta_flux_jump", eta_flux_jump.back());
+    p_indicators_table.add_value("time", t);
+    p_indicators_table.add_value("eta_fs", eta_fs.back());
+    p_indicators_table.add_value("eta_alg", eta_alg.back());
+    p_indicators_table.add_value("eta_time", eta_time.back());
+    p_indicators_table.add_value("eta_flow", eta_flow.back());
+    p_indicators_table.add_value("eta_p_residual", eta_p_residual.back());
+    p_indicators_table.add_value("eta_flux_jump", eta_flux_jump.back());
 }

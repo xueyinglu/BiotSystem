@@ -5,7 +5,9 @@ BiotSystem::BiotSystem() : fe_pressure(1),
                            dof_handler_displacement(triangulation),
                            permeability(0.05),
                            lambda(0.5),
-                           mu(0.125)
+                           mu(0.125),
+                           dof_handler_output(triangulation),
+                           fe_output(FE_DGQ<dim>(0),1)
 {
 }
 BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T) : fe_pressure(1),
@@ -14,7 +16,9 @@ BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T) : f
                            dof_handler_displacement(triangulation),
                            permeability(0.05),
                            lambda(0.5),
-                           mu(0.125)
+                           mu(0.125),
+                           dof_handler_output(triangulation),
+                           fe_output(FE_DGQ<dim>(0),1)
 {
     num_global_refinement = _num_global_refinement;
     del_t = _del_t;

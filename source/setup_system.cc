@@ -30,4 +30,7 @@ void BiotSystem::setup_system()
 
     solution_displacement.reinit(dof_handler_displacement.n_dofs());
     system_rhs_displacement.reinit(dof_handler_displacement.n_dofs());
+
+    dof_handler_output.distribute_dofs(fe_output);
+    cell_eta_time.reinit(dof_handler_output.n_dofs());
 }
