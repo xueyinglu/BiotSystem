@@ -34,4 +34,6 @@ void BiotSystem::setup_system()
     dof_handler_output.distribute_dofs(fe_output);
     cell_eta_time.reinit(dof_handler_output.n_dofs());
     cell_eta_E_p.reinit(dof_handler_output.n_dofs());
+    cell_eta_E_partial_u.reinit(dof_handler_output.n_dofs());
+    cell_eta_E_u.reinit(dof_handler_output.n_dofs());
 }

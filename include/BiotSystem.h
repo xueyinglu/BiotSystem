@@ -76,6 +76,8 @@ private:
     FESystem<dim> fe_output;
     Vector<double> cell_eta_time;
     Vector<double> cell_eta_E_p;
+    Vector<double> cell_eta_E_partial_u;
+    Vector<double> cell_eta_E_u;
     /* global a posteriori error estimators (recorded for each time step) */
     vector<double> eta_fs;
     vector<double> eta_alg;

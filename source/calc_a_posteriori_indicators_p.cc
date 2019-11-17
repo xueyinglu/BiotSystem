@@ -172,7 +172,7 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     data_out.add_data_vector(cell_eta_time, "eta_time", DataOut<dim>::type_dof_data);
     data_out.add_data_vector(cell_eta_E_p, "eta_E_p", DataOut<dim>::type_dof_data);
     data_out.build_patches();
-    ofstream output("output/indicators"+to_string(timestep)+".vtk");
+    ofstream output("output/indicators-p"+to_string(timestep)+".vtk");
     data_out.write_vtk(output);
 
 
