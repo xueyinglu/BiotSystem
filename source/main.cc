@@ -4,7 +4,7 @@ int main()
   try
   {
     // BiotSystem test;
-    BiotSystem convergence_test(4, 0.05, 1.01);
+    BiotSystem convergence_test(5, 0.1, 1.01);
     convergence_test.run_fixed_stress();
     std::cout << "main function" << std::endl;
     // BiotSystem u_convergence;

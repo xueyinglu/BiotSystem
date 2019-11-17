@@ -101,6 +101,7 @@ void BiotSystem::calc_a_posteriori_indicators_u()
 
     eta_e_partial_sigma = sqrt(h * eta_e_partial_sigma);
     eta_face_partial_sigma_n.push_back(eta_e_partial_sigma);
+    cout << "eta_e_partial_sigma = "<< eta_e_partial_sigma<<endl;
     double dum2 = 0;
     for (auto &n : eta_face_partial_sigma_n)
     {
@@ -109,6 +110,7 @@ void BiotSystem::calc_a_posteriori_indicators_u()
     eta_face_partial_sigma.push_back(dum2 * dum2);
 
     eta_e_sigma *= h;
+    cout <<"eta_e_sigma = " << eta_e_sigma << endl;
     if (timestep == 1)
     {
         eta_face_sigma.push_back(eta_e_sigma);

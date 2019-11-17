@@ -10,9 +10,17 @@ class BiotSystem
 public:
     BiotSystem();
     BiotSystem(int _num_global_refinement, double _del_t, double _T);
+    BiotSystem(string testcase, int _num_global_refinement, double _del_t, double _T);
     // virtual BiotSystem();
     void run_fixed_stress();
     void check_disp_solver_convergence();
+
+    enum TestCase{
+        none, 
+        simple,
+        mandel
+    };
+
 
 private:
     double del_t = 0.01;
@@ -50,6 +58,8 @@ private:
     InitialPressure initial_pressure;
     ConstantFunction<dim> permeability;
     ConstantFunction<dim> lambda, mu;
+
+    TestCase test_case;
     // coupling
 
     double biot_alpha = 0.75;
@@ -65,6 +75,7 @@ private:
     DoFHandler<dim> dof_handler_output;
     FESystem<dim> fe_output;
     Vector<double> cell_eta_time;
+    Vector<double> cell_eta_E_p;
     /* global a posteriori error estimators (recorded for each time step) */
     vector<double> eta_fs;
     vector<double> eta_alg;

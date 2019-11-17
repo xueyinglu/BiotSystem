@@ -50,6 +50,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/data_out.h>
+#include <deal.II/numerics/data_out_dof_data.h>
 #include <deal.II/numerics/solution_transfer.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>

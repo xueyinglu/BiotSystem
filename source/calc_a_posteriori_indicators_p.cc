@@ -30,6 +30,7 @@ void BiotSystem::calc_a_posteriori_indicators_p()
 
     vector<types::global_dof_index> output_dofs(dof_handler_output.get_fe().dofs_per_cell);
     cell_eta_time = 0;
+    cell_eta_E_p = 0;
     for (; cell != endc; ++cell, ++ cell_output)
     {
         fe_value_pressure.reinit(cell);
@@ -80,9 +81,10 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     vector<double> p_values(n_q_points);
     vector<double> laplacian_p_values(n_q_points);
     cell = dof_handler_pressure.begin_active();
+    cell_output = dof_handler_output.begin_active();
     typename DoFHandler<dim>::active_cell_iterator
         cell_displacement = dof_handler_displacement.begin_active();
-    for (; cell != endc; ++cell, ++cell_displacement)
+    for (; cell != endc; ++cell, ++cell_displacement, ++ cell_output)
     {
         fe_value_pressure.reinit(cell);
         fe_value_displacement.reinit(cell_displacement);
@@ -92,6 +94,8 @@ void BiotSystem::calc_a_posteriori_indicators_p()
         fe_value_displacement.get_function_gradients(solution_displacement, grad_u_values);
         fe_value_displacement.get_function_gradients(prev_timestep_sol_displacement, prev_timestep_grad_u_values);
         permeability.value_list(fe_value_pressure.get_quadrature_points(), permeability_values);
+        
+        cell_output -> get_dof_indices(output_dofs);
         for (unsigned int q = 0; q < n_q_points; q++)
         {   
             // TODO: extension to non constant permeability
@@ -101,6 +105,7 @@ void BiotSystem::calc_a_posteriori_indicators_p()
                                 - prev_timestep_grad_u_values[q][0][0] - prev_timestep_grad_u_values[q][1][1]);
             // cout << "cell residual = " << cell_residual << endl;
             eta_E_p += cell_residual * cell_residual * fe_value_pressure.JxW(q);
+            cell_eta_E_p[output_dofs[0]] += cell_residual * cell_residual * fe_value_pressure.JxW(q);
         }
     }
 
@@ -165,8 +170,9 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     DataOut<dim> data_out;
     data_out.attach_dof_handler(dof_handler_output);
     data_out.add_data_vector(cell_eta_time, "eta_time", DataOut<dim>::type_dof_data);
+    data_out.add_data_vector(cell_eta_E_p, "eta_E_p", DataOut<dim>::type_dof_data);
     data_out.build_patches();
-    ofstream output("indicators"+to_string(timestep)+".vtk");
+    ofstream output("output/indicators"+to_string(timestep)+".vtk");
     data_out.write_vtk(output);
 
 

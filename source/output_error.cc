@@ -31,12 +31,12 @@ void BiotSystem::output_error() {
     p_indicators_table.set_tex_caption("eta_flow", "$\\eta_{\\text{flow}}$");
     p_indicators_table.set_tex_caption("eta_p_residual", "$\\eta_{\\text{p\\_residual}}$");
     p_indicators_table.set_tex_caption("eta_flux_jump", "$\\eta_{\\text{flux\\_jump}}$");
-    p_indicators_table.set_tex_table_caption(" $h = 1/(2^" + to_string(num_global_refinement)+ "), \\Delta t = " + to_string(del_t) +"$"); 
+    p_indicators_table.set_tex_table_caption("Flow indicators: $h = 1/(2^" + to_string(num_global_refinement)+ "), \\Delta t = " + to_string(del_t) +"$"); 
     
-    u_indicators_table.set_precision("eta_face_partial_sigma", 6);
-    u_indicators_table.set_precision("eta_face_sigma", 6);
-    u_indicators_table.set_precision("eta_partial_u", 6);
-    u_indicators_table.set_precision("eta_u", 6);
+    u_indicators_table.set_precision("eta_face_partial_sigma", 8);
+    u_indicators_table.set_precision("eta_face_sigma", 8);
+    u_indicators_table.set_precision("eta_partial_u", 8);
+    u_indicators_table.set_precision("eta_u", 8);
     u_indicators_table.set_scientific("eta_face_partial_sigma", true);
     u_indicators_table.set_scientific("eta_face_sigma", true);
     u_indicators_table.set_scientific("eta_partial_u", true);
@@ -45,7 +45,7 @@ void BiotSystem::output_error() {
     u_indicators_table.set_tex_caption("eta_face_sigma", "$\\eta_{\\mathcal{E}_{\\sigma}}$");
     u_indicators_table.set_tex_caption("eta_partial_u", "$\\eta_{\\mathcal{T}_{\\partial u}}$");
     u_indicators_table.set_tex_caption("eta_u", "$\\eta_{\\mathcal{T}_{u}}$");
-    u_indicators_table.set_tex_table_caption(" $h = 1/(2^" + to_string(num_global_refinement)+ "), \\Delta t = " + to_string(del_t) +"$"); 
+    u_indicators_table.set_tex_table_caption("Mechanics indicators: $h = 1/(2^" + to_string(num_global_refinement)+ "), \\Delta t = " + to_string(del_t) +"$"); 
     ofstream aposterior_table_file("aposteriori.tex");
     p_indicators_table.write_tex(aposterior_table_file, false);
     u_indicators_table.write_tex(aposterior_table_file, false);
