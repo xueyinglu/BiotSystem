@@ -11,6 +11,7 @@ public:
     BiotSystem();
     BiotSystem(int _num_global_refinement, double _del_t, double _T);
     BiotSystem(string testcase, int _num_global_refinement, double _del_t, double _T);
+    BiotSystem(bool _bEG, int _num_global_refinement, double _del_t, double _T);
     // virtual BiotSystem();
     void run_fixed_stress();
     void check_disp_solver_convergence();
@@ -32,11 +33,12 @@ private:
 
     Triangulation<dim> triangulation;
     // pressure solution
-    FE_Q<dim> fe_pressure;
+    FESystem<dim> fe_pressure;
     DoFHandler<dim> dof_handler_pressure;
     SparsityPattern sparse_pattern_pressure;
     SparseMatrix<double> system_matrix_pressure;
 
+    bool bEG;
     Vector<double> solution_pressure;
     Vector<double> system_rhs_pressure;
 
@@ -63,7 +65,7 @@ private:
     // coupling
 
     double biot_alpha = 0.75;
-    double K_b = 0.5;
+    double K_b = 11./24; //K_b = lambda +2/3*mu
     double biot_inv_M = 3./28;
     double tol_fixed_stress = 1e-3;
     Vector<double> prev_timestep_sol_pressure;
@@ -101,7 +103,7 @@ private:
     void make_grid();
     void setup_system();
 
-    void assemble_system_pressure(int fs_count);
+    void assemble_system_pressure();
     void assemble_system_displacement();
 
     void solve_pressure();
@@ -115,7 +117,7 @@ private:
     void output_pressure(int timestep, int fs_count) const;
     void output_error();
     void calc_error(); // compute the errors
-    void process_solution(int fs_count); // compute the errors
+    //void process_solution(int fs_count); // compute the errors
     void plot_error() const;
 
     void calc_a_posteriori_indicators_p();

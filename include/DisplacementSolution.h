@@ -4,12 +4,13 @@
 using namespace std;
 using namespace dealii;
 
-class DisplacementSolution {
+class DisplacementSolution: public Function<dim> {
     public :
-    DisplacementSolution( double _t){t = _t;};
+    DisplacementSolution( double _t):
+    Function<dim> (dim) {t = _t;};
     
-    virtual Tensor<1,dim> value(const Point<dim> & point) const;
-    virtual void value_list(const vector<Point<dim> > & points, vector<Tensor<1,dim> > & value_list) const ;
+    virtual void vector_value(const Point<dim> & point, Vector<double> & values) const;
+    virtual void vector_value_list(const vector<Point<dim> > & points, vector<Vector<double> > & value_list) const ;
     private :
     double t;
 };

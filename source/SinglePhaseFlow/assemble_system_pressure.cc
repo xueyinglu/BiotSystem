@@ -1,6 +1,6 @@
 #include "BiotSystem.h"
 using namespace std;
-void BiotSystem::assemble_system_pressure(int fs_count)
+void BiotSystem::assemble_system_pressure()
 {
     QGauss<dim> quadrature(fe_pressure.degree + 1);
     FEValues<dim> fe_value(fe_pressure,

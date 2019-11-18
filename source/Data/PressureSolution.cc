@@ -8,4 +8,5 @@ double PressureSolution::value(const Point<dim> &p, const unsigned int component
     double PI = atan(1) *4;
     double A = 2*PI *PI * k /(alpha +inv_M);
     return exp(-A*t)* sin(PI*p(0))*sin(PI*p(1));
+    // return t * p(0) *(1-p(0)) *p(1) *(1-p(1));
 }

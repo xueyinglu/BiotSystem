@@ -1,4 +1,5 @@
 #include "BiotSystem.h"
+#include "DisplacementSolution.h"
 #include "AuxTools.h"
 using namespace std;
 void BiotSystem::assemble_system_displacement()
@@ -71,8 +72,8 @@ void BiotSystem::assemble_system_displacement()
 
         fe_values_pressure.get_function_values(solution_pressure, pore_pressure_values);
         fe_values_pressure.get_function_gradients(solution_pressure, grad_p_values);
-        initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
-        /*
+        //initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
+       /* 
         for (unsigned int i = 0; i < dofs_per_cell; ++i)
         {
             const unsigned int
@@ -114,16 +115,16 @@ void BiotSystem::assemble_system_displacement()
                 //                rhs_values[q_point](component_i) *
                 //               fe_values.JxW(q_point);
                 // coupling pressure
-                //cell_rhs(i) += fe_values.shape_grad(i, q_point)[component_i] *
-                //               biot_alpha * pore_pressure_values[q_point] *
-                //               fe_values.JxW(q_point);
-                cell_rhs(i) += fe_values.shape_value(i, q_point) *
-                               biot_alpha * grad_p_values[q_point][component_i] *
+                cell_rhs(i) += fe_values.shape_grad(i, q_point)[component_i] *
+                               biot_alpha * pore_pressure_values[q_point] *
                                fe_values.JxW(q_point);
+                //cell_rhs(i) -= fe_values.shape_value(i, q_point) *
+                //               biot_alpha * grad_p_values[q_point][component_i] *
+                 //              fe_values.JxW(q_point);
             }
         }
         */
-       
+        
         // Assemble the cell matrix as in elasticity_cg
         for (unsigned int q = 0; q < n_q_points; ++q)
         {
@@ -149,7 +150,7 @@ void BiotSystem::assemble_system_displacement()
                 }
 
                 // assemble cell level rhs as in elasticity_cg
-                cell_rhs(i) += biot_alpha * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
+                 cell_rhs(i) += biot_alpha * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
                 // cell_rhs(i) -= biot_alpha * (grad_p_values[q]*phi_i_u[i])*fe_values.JxW(q);
             }
             
@@ -174,14 +175,47 @@ void BiotSystem::assemble_system_displacement()
 
     // hanging_node_constraints.condense(system_matrix_displacement);
     // hanging_node_constraints.condense(system_rhs_displacement);
+    /*
+    vector<bool> component_mask;
+    component_mask.push_back(false);
+    component_mask.push_back(true);
+    std::map<types::global_dof_index, double> boundary_values; */
+    /*VectorTools::interpolate_boundary_values(dof_handler_displacement,
+                                             0,
+                                             ZeroFunction<dim>(dim),
+                                             boundary_values); */
+    /*
+    VectorTools::interpolate_boundary_values(dof_handler_displacement,
+                                             1,
+                                             ZeroFunction<dim>(dim),
+                                             boundary_values,
+                                             ComponentMask(component_mask));
 
-    std::map<types::global_dof_index, double> boundary_values;
+    MatrixTools::apply_boundary_values(boundary_values,
+                                       system_matrix_displacement,
+                                       solution_displacement,
+                                       system_rhs_displacement);
+    component_mask[0] = true;
+    component_mask[1] = false;
     VectorTools::interpolate_boundary_values(dof_handler_displacement,
                                              0,
                                              ZeroFunction<dim>(dim),
+                                             boundary_values,
+                                             ComponentMask(component_mask));
+    MatrixTools::apply_boundary_values(boundary_values,
+                                       system_matrix_displacement,
+                                       solution_displacement,
+                                       system_rhs_displacement);
+    */
+    std::map<types::global_dof_index, double> boundary_values;
+    VectorTools::interpolate_boundary_values(dof_handler_displacement,
+                                             0,
+                                             DisplacementSolution(t),
+                                             //ZeroFunction<dim>(dim),
                                              boundary_values);
     MatrixTools::apply_boundary_values(boundary_values,
                                        system_matrix_displacement,
                                        solution_displacement,
                                        system_rhs_displacement);
+    
 }

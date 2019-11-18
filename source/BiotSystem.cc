@@ -1,5 +1,5 @@
 #include "BiotSystem.h"
-BiotSystem::BiotSystem() : fe_pressure(1),
+BiotSystem::BiotSystem() : fe_pressure(FE_Q<dim>(1), 1),
                            dof_handler_pressure(triangulation),
                            fe_displacement(FE_Q<dim>(1), dim),
                            dof_handler_displacement(triangulation),
@@ -11,7 +11,7 @@ BiotSystem::BiotSystem() : fe_pressure(1),
 {
     test_case = simple;
 }
-BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T) : fe_pressure(1),
+BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T) : fe_pressure(FE_Q<dim>(1), 1),
                                                                                dof_handler_pressure(triangulation),
                                                                                fe_displacement(FE_Q<dim>(1), dim),
                                                                                dof_handler_displacement(triangulation),
@@ -28,7 +28,7 @@ BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T) : f
     test_case = simple;
 }
 
-BiotSystem::BiotSystem(string testcase, int _num_global_refinement, double _del_t, double _T) : fe_pressure(1),
+BiotSystem::BiotSystem(string testcase, int _num_global_refinement, double _del_t, double _T) : fe_pressure(FE_Q<dim>(1), 1),
                                                                                                 dof_handler_pressure(triangulation),
                                                                                                 fe_displacement(FE_Q<dim>(1), dim),
                                                                                                 dof_handler_displacement(triangulation),
@@ -46,4 +46,21 @@ BiotSystem::BiotSystem(string testcase, int _num_global_refinement, double _del_
     {
         test_case = simple;
     }
+}
+BiotSystem::BiotSystem(bool _bEG, int _num_global_refinement, double _del_t, double _T) : fe_pressure(FE_Q<dim>(1), 1, FE_DGQ<dim>(0), 1),
+                                                                                          dof_handler_pressure(triangulation),
+                                                                                          fe_displacement(FE_Q<dim>(1), dim),
+                                                                                          dof_handler_displacement(triangulation),
+                                                                                          permeability(0.05),
+                                                                                          lambda(0.5),
+                                                                                          mu(0.125),
+                                                                                          dof_handler_output(triangulation),
+                                                                                          fe_output(FE_DGQ<dim>(0), 1)
+{
+    bEG = _bEG;
+    num_global_refinement = _num_global_refinement;
+    del_t = _del_t;
+    T = _T;
+    h = 1. / std::pow(2, num_global_refinement);
+    test_case = simple;
 }

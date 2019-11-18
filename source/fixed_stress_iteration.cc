@@ -11,7 +11,7 @@ void BiotSystem::fixed_stress_iteration()
     {
         fs_count++;
         cout << "fixed stress no. " << fs_count << endl;
-        assemble_system_pressure(fs_count);
+        assemble_system_pressure();
         solve_pressure();
         assemble_system_displacement();
         solve_displacement();
