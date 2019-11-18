@@ -11,7 +11,7 @@ BiotSystem::BiotSystem() : fe_pressure(FE_Q<dim>(1), 1),
 {
     test_case = simple;
 }
-BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T) : fe_pressure(FE_Q<dim>(1), 1),
+BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T, double _fs_tol) : fe_pressure(FE_Q<dim>(1), 1),
                                                                                dof_handler_pressure(triangulation),
                                                                                fe_displacement(FE_Q<dim>(1), dim),
                                                                                dof_handler_displacement(triangulation),
@@ -26,6 +26,7 @@ BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T) : f
     T = _T;
     h = 1. / std::pow(2, num_global_refinement);
     test_case = simple;
+    tol_fixed_stress = _fs_tol;
 }
 
 BiotSystem::BiotSystem(string testcase, int _num_global_refinement, double _del_t, double _T) : fe_pressure(FE_Q<dim>(1), 1),

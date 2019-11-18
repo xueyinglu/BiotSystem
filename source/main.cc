@@ -4,11 +4,11 @@ int main()
   try
   {
   //  BiotSystem test;
-  //  BiotSystem convergence_test(4, 2.5e-4, 0.01);
-  //  convergence_test.run_fixed_stress();
+    BiotSystem convergence_test(5, 2.5e-4, 0.0101, 1e-5);
+    convergence_test.run_fixed_stress();
     //std::cout << "main function" << std::endl;
-     BiotSystem u_convergence;
-     u_convergence.check_disp_solver_convergence();
+  //   BiotSystem u_convergence;
+  //   u_convergence.check_disp_solver_convergence();
   }
   catch (std::exception &exc)
   {

@@ -54,7 +54,6 @@ void BiotSystem::calc_error()
         }
     }
     */
-    L2_norm_displacement = sqrt(L2_norm_displacement);
 
     convergence_table.add_value("time", t);
     convergence_table.add_value("1/h", 1./h);

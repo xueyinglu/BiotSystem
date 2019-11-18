@@ -179,12 +179,8 @@ void BiotSystem::assemble_system_displacement()
     vector<bool> component_mask;
     component_mask.push_back(false);
     component_mask.push_back(true);
-    std::map<types::global_dof_index, double> boundary_values; */
-    /*VectorTools::interpolate_boundary_values(dof_handler_displacement,
-                                             0,
-                                             ZeroFunction<dim>(dim),
-                                             boundary_values); */
-    /*
+    std::map<types::global_dof_index, double> boundary_values; 
+    
     VectorTools::interpolate_boundary_values(dof_handler_displacement,
                                              1,
                                              ZeroFunction<dim>(dim),
@@ -207,6 +203,7 @@ void BiotSystem::assemble_system_displacement()
                                        solution_displacement,
                                        system_rhs_displacement);
     */
+    
     std::map<types::global_dof_index, double> boundary_values;
     VectorTools::interpolate_boundary_values(dof_handler_displacement,
                                              0,
@@ -217,5 +214,6 @@ void BiotSystem::assemble_system_displacement()
                                        system_matrix_displacement,
                                        solution_displacement,
                                        system_rhs_displacement);
+                                       
     
 }

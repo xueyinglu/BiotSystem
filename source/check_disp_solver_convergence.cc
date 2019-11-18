@@ -65,7 +65,9 @@ void BiotSystem::check_disp_solver_convergence()
         convergence_table.add_value("cycle", cycle);
         convergence_table.add_value("1/h", 1. / h);
         convergence_table.add_value("L2_u", L2_norm_displacement);
+        convergence_table.set_precision("L2_u", 8);
+        convergence_table.set_scientific("L2_u", true);
     }
     ofstream u_convergence_file("u_convergence.tex");
-    convergence_table.write_tex(u_convergence_file);
+    convergence_table.write_tex(u_convergence_file, false);
 }

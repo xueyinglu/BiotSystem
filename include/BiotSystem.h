@@ -9,7 +9,7 @@ class BiotSystem
 {
 public:
     BiotSystem();
-    BiotSystem(int _num_global_refinement, double _del_t, double _T);
+    BiotSystem(int _num_global_refinement, double _del_t, double _T, double _fs_tol);
     BiotSystem(string testcase, int _num_global_refinement, double _del_t, double _T);
     BiotSystem(bool _bEG, int _num_global_refinement, double _del_t, double _T);
     // virtual BiotSystem();
@@ -67,7 +67,7 @@ private:
     double biot_alpha = 0.75;
     double K_b = 11./24; //K_b = lambda +2/3*mu
     double biot_inv_M = 3./28;
-    double tol_fixed_stress = 1e-3;
+    double tol_fixed_stress = 1e-5;
     Vector<double> prev_timestep_sol_pressure;
     Vector<double> prev_timestep_sol_displacement;
     Vector<double> prev_fs_sol_pressure;
