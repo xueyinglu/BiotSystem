@@ -49,81 +49,14 @@ void BiotSystem::assemble_system_displacement()
         fe_values.reinit(cell);
         fe_values_pressure.reinit(cell_pressure);
 
-        // Next we get the values of the coefficients at the quadrature
-        // points. Likewise for the right hand side:
         lambda.value_list(fe_values.get_quadrature_points(), lambda_values);
         mu.value_list(fe_values.get_quadrature_points(), mu_values);
         right_hand_side.vector_value_list(fe_values.get_quadrature_points(),
                                           rhs_values);
-        /*
-        if (timestep == 0) // initialize u_0
-        {
-            initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
-            //initial_pressure.grad_list(fe_values_pressure.get_quadrature_points(), grad_p_values);
-            // for (int q = 0 ; q <n_q_points;q++){
-            //     cout << "initial pressure [q] = " <<pore_pressure_values[q]<<endl;
-            //}
-        }
-        else
-        {
-            fe_values_pressure.get_function_values(solution_pressure, pore_pressure_values);
-        }
-        */
 
         fe_values_pressure.get_function_values(solution_pressure, pore_pressure_values);
         fe_values_pressure.get_function_gradients(solution_pressure, grad_p_values);
         //initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
-       /* 
-        for (unsigned int i = 0; i < dofs_per_cell; ++i)
-        {
-            const unsigned int
-                component_i = fe_displacement.system_to_component_index(i).first;
-
-            for (unsigned int j = 0; j < dofs_per_cell; ++j)
-            {
-                const unsigned int
-                    component_j = fe_displacement.system_to_component_index(j).first;
-
-                for (unsigned int q_point = 0; q_point < n_q_points;
-                     ++q_point)
-                {
-                    cell_matrix(i, j) +=
-                        ((fe_values.shape_grad(i, q_point)[component_i] *
-                          fe_values.shape_grad(j, q_point)[component_j] *
-                          lambda_values[q_point]) +
-                         (fe_values.shape_grad(i, q_point)[component_j] *
-                          fe_values.shape_grad(j, q_point)[component_i] *
-                          mu_values[q_point]) +
-                         ((component_i == component_j) ? (fe_values.shape_grad(i, q_point) *
-                                                          fe_values.shape_grad(j, q_point) *
-                                                          mu_values[q_point])
-                                                       : 0)) *
-                        fe_values.JxW(q_point);
-                }
-            }
-        }
-        
-        
-        for (unsigned int i = 0; i < dofs_per_cell; ++i)
-        {
-            const unsigned int
-                component_i = fe_displacement.system_to_component_index(i).first;
-
-            for (unsigned int q_point = 0; q_point < n_q_points; ++q_point)
-            { // body force
-                // cell_rhs(i) += fe_values.shape_value(i, q_point) *
-                //                rhs_values[q_point](component_i) *
-                //               fe_values.JxW(q_point);
-                // coupling pressure
-                cell_rhs(i) += fe_values.shape_grad(i, q_point)[component_i] *
-                               biot_alpha * pore_pressure_values[q_point] *
-                               fe_values.JxW(q_point);
-                //cell_rhs(i) -= fe_values.shape_value(i, q_point) *
-                //               biot_alpha * grad_p_values[q_point][component_i] *
-                 //              fe_values.JxW(q_point);
-            }
-        }
-        */
         
         // Assemble the cell matrix as in elasticity_cg
         for (unsigned int q = 0; q < n_q_points; ++q)
@@ -158,23 +91,10 @@ void BiotSystem::assemble_system_displacement()
         
         
         cell->get_dof_indices(local_dof_indices);
-        /*
-        for (unsigned int i = 0; i < dofs_per_cell; ++i)
-        {
-            for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                system_matrix_displacement.add(local_dof_indices[i],
-                                               local_dof_indices[j],
-                                               cell_matrix(i, j));
-
-            system_rhs_displacement(local_dof_indices[i]) += cell_rhs(i);
-        }
-        */
-        hanging_node_constraints.distribute_local_to_global(cell_matrix, local_dof_indices, system_matrix_displacement);
-        hanging_node_constraints.distribute_local_to_global(cell_rhs, local_dof_indices, system_rhs_displacement);
+        constraints_displacement.distribute_local_to_global(cell_matrix, local_dof_indices, system_matrix_displacement);
+        constraints_displacement.distribute_local_to_global(cell_rhs, local_dof_indices, system_rhs_displacement);
     }
 
-    // hanging_node_constraints.condense(system_matrix_displacement);
-    // hanging_node_constraints.condense(system_rhs_displacement);
     /*
     vector<bool> component_mask;
     component_mask.push_back(false);

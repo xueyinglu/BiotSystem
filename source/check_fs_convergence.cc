@@ -1,4 +1,5 @@
 #include "BiotSystem.h"
+#include "AuxTools.h"
 using namespace std;
 // check the convergence of fixed stress, return the residual
 double BiotSystem::check_fs_convergence(int fs_count)
@@ -24,34 +25,30 @@ double BiotSystem::check_fs_convergence(int fs_count)
     double mean_stress;
     double prev_fs_mean_stress;
     double residual = 0.0;
+    double l2square_mean_stress = 0.0;
 
     for (; cell != endc; ++cell, ++cell_displacement)
     {
         fe_value_pressure.reinit(cell);
         fe_value_displacement.reinit(cell_displacement);
         fe_value_pressure.get_function_values(solution_pressure, pressure_values);
-        /*
-        if (timestep == 1 && fs_count == 1)
-        {
-            initial_pressure.value_list(fe_value_pressure.get_quadrature_points(), prev_fs_sol_pressure_values);
-        }
-        else
-        {
-            fe_value_pressure.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
-        }
-        */
         fe_value_pressure.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
         fe_value_displacement.get_function_gradients(solution_displacement, grad_u_values);
         fe_value_displacement.get_function_gradients(prev_fs_sol_displacement, prev_fs_sol_grad_u_values);
 
         for (unsigned int q = 0; q < n_q_points; q++)
         {
-
-            mean_stress = K_b * (grad_u_values[q][0][0] + grad_u_values[q][1][1]) - biot_alpha * pressure_values[q];
-            prev_fs_mean_stress = K_b * (prev_fs_sol_grad_u_values[q][0][0] + prev_fs_sol_grad_u_values[q][1][1]) - biot_alpha * prev_fs_sol_pressure_values[q];
+            const Tensor<2, dim> grad_u = Tensors ::get_grad_u<dim>(q, grad_u_values);
+            const double div_u = Tensors ::get_divergence_u<dim>(grad_u);
+            const Tensor<2, dim> prev_fs_grad_u = Tensors ::get_grad_u<dim>(q, prev_fs_sol_grad_u_values);
+            const double prev_fs_div_u = Tensors ::get_divergence_u<dim>(prev_fs_grad_u);
+            mean_stress = K_b * div_u - biot_alpha * pressure_values[q];
+            prev_fs_mean_stress = K_b * prev_fs_div_u - biot_alpha * prev_fs_sol_pressure_values[q];
             residual += (mean_stress - prev_fs_mean_stress) * (mean_stress - prev_fs_mean_stress) * fe_value_pressure.JxW(q);
+            l2square_mean_stress += mean_stress * mean_stress * fe_value_pressure.JxW(q);
+        
         }
     }
-    cout << "fixed stress iteration convergence criteria = " << sqrt(residual) << endl;
-    return sqrt(residual);
+    cout << "fixed stress iteration convergence criteria = " << sqrt(residual/l2square_mean_stress) << endl;
+    return sqrt(residual/l2square_mean_stress);
 }

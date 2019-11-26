@@ -10,7 +10,7 @@ void BiotSystem::calc_error()
                                       solution_pressure,
                                       PressureSolution(t),
                                       difference_per_cell_pressure,
-                                      QGauss<dim>(fe_pressure.degree + 2),
+                                      QGauss<dim>(fe_pressure.degree + 1),
                                       VectorTools::L2_norm);
     double L2_norm_pressure = difference_per_cell_pressure.l2_norm();
         //VectorTools::compute_global_error(triangulation,
@@ -23,7 +23,7 @@ void BiotSystem::calc_error()
                                       solution_displacement,
                                       DisplacementSolution(t),
                                       difference_per_cell_displacement,
-                                      QGauss<dim>(fe_displacement.degree + 2),
+                                      QGauss<dim>(fe_displacement.degree + 1),
                                       VectorTools::L2_norm);
     double L2_norm_displacement = difference_per_cell_displacement.l2_norm();
 
@@ -57,6 +57,6 @@ void BiotSystem::calc_error()
 
     convergence_table.add_value("time", t);
     convergence_table.add_value("1/h", 1./h);
-    convergence_table.add_value("L2_u", L2_norm_displacement);
     convergence_table.add_value("L2_p", L2_norm_pressure);
+    convergence_table.add_value("L2_u", L2_norm_displacement);
 }

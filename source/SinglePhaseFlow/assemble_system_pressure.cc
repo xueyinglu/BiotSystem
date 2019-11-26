@@ -1,4 +1,5 @@
 #include "BiotSystem.h"
+#include "AuxTools.h"
 using namespace std;
 void BiotSystem::assemble_system_pressure()
 {
@@ -20,7 +21,7 @@ void BiotSystem::assemble_system_pressure()
     vector<vector<Tensor<1, dim>>> prev_fs_sol_grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
     double prev_timestep_mean_stress;
     double prev_fs_mean_stress;
-    // vector<vector<double>> grad_u(dim, dim);
+    
     typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_pressure.begin_active(),
                                                    endc = dof_handler_pressure.end();
 
@@ -34,26 +35,6 @@ void BiotSystem::assemble_system_pressure()
         cell_rhs = 0;
         /* get the function values at current element */
         permeability.value_list(fe_value.get_quadrature_points(), permeability_values);
-        /*
-        if (timestep == 1)
-        {
-            initial_pressure.value_list(fe_value.get_quadrature_points(), prev_timestep_sol_pressure_values);
-            if (fs_count == 1)
-            {
-                initial_pressure.value_list(fe_value.get_quadrature_points(), prev_fs_sol_pressure_values);
-            }
-            else
-            {
-
-                fe_value.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
-            }
-        }
-        else
-        {
-            fe_value.get_function_values(prev_timestep_sol_pressure, prev_timestep_sol_pressure_values);
-            fe_value.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
-        }
-        */
         fe_value.get_function_values(prev_timestep_sol_pressure, prev_timestep_sol_pressure_values);
         fe_value.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
         fe_value_displacement.get_function_gradients(prev_timestep_sol_displacement, prev_timestep_sol_grad_u_values);
@@ -61,10 +42,14 @@ void BiotSystem::assemble_system_pressure()
         /* assemble cell level matrix and rhs */
         for (unsigned int q = 0; q < n_q_points; q++)
         {
-            // calculate the mean stress value at the quadrature point
-            prev_timestep_mean_stress = K_b * (prev_timestep_sol_grad_u_values[q][0][0] + prev_timestep_sol_grad_u_values[q][1][1])
+            // calculate the mean stress values at the quadrature point
+            const Tensor<2, dim> prev_time_grad_u = Tensors ::get_grad_u<dim>(q, prev_timestep_sol_grad_u_values);
+            const double prev_time_div_u = Tensors ::get_divergence_u<dim>(prev_time_grad_u);
+            const Tensor<2, dim> prev_fs_grad_u = Tensors ::get_grad_u<dim>(q, prev_fs_sol_grad_u_values);
+            const double prev_fs_div_u = Tensors ::get_divergence_u<dim>(prev_fs_grad_u);
+            prev_timestep_mean_stress = K_b * prev_time_div_u 
                                          - biot_alpha * prev_timestep_sol_pressure_values[q];
-            prev_fs_mean_stress = K_b * (prev_fs_sol_grad_u_values[q][0][0] + prev_fs_sol_grad_u_values[q][1][1])
+            prev_fs_mean_stress = K_b * prev_fs_div_u
                                          - biot_alpha * prev_fs_sol_pressure_values[q];
             for (unsigned int i = 0; i < dofs_per_cell; i++)
             {
@@ -101,18 +86,11 @@ void BiotSystem::assemble_system_pressure()
             }
         }
         cell->get_dof_indices(local_dof_indices);
-        for (unsigned int i = 0; i < dofs_per_cell; i++)
-        {
-            for (unsigned int j = 0; j < dofs_per_cell; j++)
-            {
-                system_matrix_pressure.add(local_dof_indices[i], local_dof_indices[j], cell_matrix(i, j));
-            }
-            system_rhs_pressure(local_dof_indices[i]) += cell_rhs(i);
-        }
+        constraints_pressure.distribute_local_to_global(cell_matrix, local_dof_indices, system_matrix_pressure);
+        constraints_pressure.distribute_local_to_global(cell_rhs, local_dof_indices, system_rhs_pressure);
     }
 
     std::map<types::global_dof_index, double> boundary_values;
-    //VectorTools:: interpolate_boundary_values(dof_handler_pressure, 0, Functions::ZeroFunction<dim>(), boundary_values);
     VectorTools::interpolate_boundary_values(dof_handler_pressure,
                                              0,
                                              ZeroFunction<2>(),

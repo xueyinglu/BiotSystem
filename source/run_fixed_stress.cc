@@ -22,8 +22,8 @@ void BiotSystem::run_fixed_stress()
         cout << "timestep = " << timestep << endl;
         t += del_t;
         fixed_stress_iteration();
-        output_displacement(timestep, -1);
-        output_pressure(timestep, -1);
+        // output_displacement(timestep, -1);
+        // output_pressure(timestep, -1);
         plot_error();
         calc_error();
         calc_a_posteriori_indicators_p();

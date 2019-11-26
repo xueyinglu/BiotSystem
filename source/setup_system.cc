@@ -4,9 +4,15 @@ void BiotSystem::setup_system()
 {
     dof_handler_pressure.distribute_dofs(fe_pressure);
     std::cout << "Number of degrees of freedom for pressure: " << dof_handler_pressure.n_dofs() << std::endl;
+    constraints_pressure.clear();
+    DoFTools::make_hanging_node_constraints(dof_handler_pressure,
+                                            constraints_pressure);
+    constraints_pressure.close();
 
-    DynamicSparsityPattern dsp_pressure(dof_handler_pressure.n_dofs());
-    DoFTools::make_sparsity_pattern(dof_handler_pressure, dsp_pressure);
+    DynamicSparsityPattern dsp_pressure(dof_handler_pressure.n_dofs(), dof_handler_pressure.n_dofs());
+    DoFTools::make_sparsity_pattern(dof_handler_pressure, dsp_pressure,
+                                    constraints_pressure,
+                                    /*keep_constrained_dofs = */ true);
     sparse_pattern_pressure.copy_from(dsp_pressure);
 
     system_matrix_pressure.reinit(sparse_pattern_pressure);
@@ -15,14 +21,14 @@ void BiotSystem::setup_system()
 
     dof_handler_displacement.distribute_dofs(fe_displacement);
     std::cout << "Number of degrees of freedom for displacement: " << dof_handler_displacement.n_dofs() << std::endl;
-    hanging_node_constraints.clear();
+    constraints_displacement.clear();
     DoFTools::make_hanging_node_constraints(dof_handler_displacement,
-                                            hanging_node_constraints);
-    hanging_node_constraints.close();
+                                            constraints_displacement);
+    constraints_displacement.close();
 
     DynamicSparsityPattern dsp_displacement(dof_handler_displacement.n_dofs(), dof_handler_displacement.n_dofs());
     DoFTools::make_sparsity_pattern(dof_handler_displacement, dsp_displacement,
-                                    hanging_node_constraints,
+                                    constraints_displacement,
                                     /*keep_constrained_dofs = */ true);
     sparsity_pattern_displacement.copy_from(dsp_displacement);
 

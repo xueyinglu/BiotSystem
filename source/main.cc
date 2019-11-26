@@ -3,10 +3,8 @@ int main()
 {
   try
   {
-  //  BiotSystem test;
-    BiotSystem convergence_test(5, 2.5e-4, 0.0101, 1e-5);
+    BiotSystem convergence_test(5, 1e-4, 0.0101, 1e-4);
     convergence_test.run_fixed_stress();
-    //std::cout << "main function" << std::endl;
   //   BiotSystem u_convergence;
   //   u_convergence.check_disp_solver_convergence();
   }

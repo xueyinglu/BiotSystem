@@ -34,6 +34,7 @@ private:
     Triangulation<dim> triangulation;
     // pressure solution
     FESystem<dim> fe_pressure;
+    ConstraintMatrix constraints_pressure;
     DoFHandler<dim> dof_handler_pressure;
     SparsityPattern sparse_pattern_pressure;
     SparseMatrix<double> system_matrix_pressure;
@@ -44,7 +45,7 @@ private:
 
     // displacement solution
     FESystem<dim> fe_displacement;
-    ConstraintMatrix hanging_node_constraints;
+    ConstraintMatrix constraints_displacement;
     DoFHandler<dim> dof_handler_displacement;
 
     SparsityPattern sparsity_pattern_displacement;
@@ -65,7 +66,7 @@ private:
     // coupling
 
     double biot_alpha = 0.75;
-    double K_b = 11./24; //K_b = lambda +2/3*mu
+    double K_b = 7./12; //K_b = lambda +2/3*mu
     double biot_inv_M = 3./28;
     double tol_fixed_stress = 1e-5;
     Vector<double> prev_timestep_sol_pressure;

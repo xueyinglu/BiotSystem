@@ -9,5 +9,5 @@ void BiotSystem::solve_displacement(){
   cg.solve(system_matrix_displacement, solution_displacement, system_rhs_displacement,
            preconditioner);
 
-  hanging_node_constraints.distribute(solution_displacement);
+  constraints_displacement.distribute(solution_displacement);
 }
