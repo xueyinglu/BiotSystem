@@ -2,7 +2,7 @@
 #include "AuxTools.h"
 using namespace std;
 // check the convergence of fixed stress, return the residual
-double BiotSystem::check_fs_convergence(int fs_count)
+double BiotSystem::check_fs_convergence()
 {
     QGauss<dim> quadrature_pressure(fe_pressure.degree + 1);
     QGauss<dim> quadrature_displacement(fe_displacement.degree + 1);
@@ -21,6 +21,10 @@ double BiotSystem::check_fs_convergence(int fs_count)
     vector<vector<Tensor<1, dim>>> grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
     vector<double> prev_fs_sol_pressure_values(n_q_points);
     vector<double> pressure_values(n_q_points);
+    
+    Vector<double> difference_in_u = solution_displacement;
+    difference_in_u -= prev_fs_sol_displacement;
+    cout <<"difference in u = " << difference_in_u.l2_norm() << endl;
 
     double mean_stress;
     double prev_fs_mean_stress;
@@ -35,6 +39,7 @@ double BiotSystem::check_fs_convergence(int fs_count)
         fe_value_pressure.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
         fe_value_displacement.get_function_gradients(solution_displacement, grad_u_values);
         fe_value_displacement.get_function_gradients(prev_fs_sol_displacement, prev_fs_sol_grad_u_values);
+        
 
         for (unsigned int q = 0; q < n_q_points; q++)
         {

@@ -1,9 +1,12 @@
 #include "BiotSystem.h"
 #include "DisplacementSolution.h"
+#include "InitialPressure.h"
 #include "AuxTools.h"
 using namespace std;
 void BiotSystem::assemble_system_displacement()
-{
+{   
+    system_matrix_displacement.reinit(sparsity_pattern_displacement);
+    system_rhs_displacement.reinit(dof_handler_displacement.n_dofs());
     QGauss<dim> quadrature_formula(fe_displacement.degree + 1);
 
     FEValues<dim> fe_values(fe_displacement, quadrature_formula,
@@ -33,6 +36,8 @@ void BiotSystem::assemble_system_displacement()
     std::vector<double> pore_pressure_values(n_q_points);
     std::vector<Tensor<1, dim>> grad_p_values(n_q_points);
     Tensor<2,dim> identity = Tensors::get_Identity<dim> ();
+
+    InitialPressure initial_pressure;
     const FEValuesExtractors::Vector displacements (0);
     // Now we can begin with the loop over all cells:
     typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_displacement.begin_active(),
@@ -56,7 +61,7 @@ void BiotSystem::assemble_system_displacement()
 
         fe_values_pressure.get_function_values(solution_pressure, pore_pressure_values);
         fe_values_pressure.get_function_gradients(solution_pressure, grad_p_values);
-        //initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
+        initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
         
         // Assemble the cell matrix as in elasticity_cg
         for (unsigned int q = 0; q < n_q_points; ++q)
@@ -78,12 +83,13 @@ void BiotSystem::assemble_system_displacement()
             for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                { // Displacements
+                { // assemble cell level matrix
                     cell_matrix(j, i) += fe_values.JxW(q) * scalar_product(sigma_phi[i], E_phi[j]);
                 }
 
                 // assemble cell level rhs as in elasticity_cg
                  cell_rhs(i) += biot_alpha * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
+                 cell_rhs(i) += 0.75 * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
                 // cell_rhs(i) -= biot_alpha * (grad_p_values[q]*phi_i_u[i])*fe_values.JxW(q);
             }
             

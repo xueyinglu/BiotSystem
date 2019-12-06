@@ -3,6 +3,8 @@
 using namespace std;
 void BiotSystem::assemble_system_pressure()
 {
+    system_matrix_pressure.reinit(sparse_pattern_pressure);
+    system_rhs_pressure.reinit(dof_handler_pressure.n_dofs());
     QGauss<dim> quadrature(fe_pressure.degree + 1);
     FEValues<dim> fe_value(fe_pressure,
                            quadrature, update_values | update_quadrature_points | update_gradients | update_JxW_values);
@@ -57,13 +59,13 @@ void BiotSystem::assemble_system_pressure()
                 {
                     // elliptic part
                     cell_matrix(i, j) +=
-                        (1. / mu_f * permeability_values[q] * // 1/mu_f * k
+                        (del_t / mu_f * permeability_values[q] * // 1/mu_f * k
                          fe_value.shape_grad(i, q) *          // grad phi_i(x_q)
                          fe_value.shape_grad(j, q) *          // grad phi_j(x_q)
                          fe_value.JxW(q));                    // dx
                     // parabolic part
                     cell_matrix(i, j) +=
-                        ((biot_inv_M + biot_alpha * biot_alpha / K_b) / del_t *                      // (1/M + alpha^2/K_b)/del_t
+                        ((biot_inv_M + biot_alpha * biot_alpha / K_b) *                      // (1/M + alpha^2/K_b)/del_t
                          fe_value.shape_value(i, q) * fe_value.shape_value(j, q) * fe_value.JxW(q)); // phi(x_q)*phi(x_q) dx
                 }
                 // source term
@@ -74,20 +76,26 @@ void BiotSystem::assemble_system_pressure()
 
                 // prev time step
                 cell_rhs(i) +=
-                    ((biot_inv_M + biot_alpha * biot_alpha / K_b) / del_t *                      // (1/M + alpha^2/K_b)/del_t
+                    ((biot_inv_M + biot_alpha * biot_alpha / K_b)  *                      // (1/M + alpha^2/K_b)/del_t
                      prev_timestep_sol_pressure_values[q] *
                      fe_value.shape_value(i, q) * fe_value.JxW(q));
 
                 // change in mean stress
                 cell_rhs(i) -=
-                    (biot_alpha / K_b / del_t *
+                    (biot_alpha / K_b  *
                      (prev_fs_mean_stress - prev_timestep_mean_stress) *
                      fe_value.shape_value(i, q) * fe_value.JxW(q));
             }
         }
         cell->get_dof_indices(local_dof_indices);
-        constraints_pressure.distribute_local_to_global(cell_matrix, local_dof_indices, system_matrix_pressure);
-        constraints_pressure.distribute_local_to_global(cell_rhs, local_dof_indices, system_rhs_pressure);
+        // constraints_pressure.distribute_local_to_global(cell_matrix, local_dof_indices, system_matrix_pressure);
+        // constraints_pressure.distribute_local_to_global(cell_rhs, local_dof_indices, system_rhs_pressure);
+        for (int i=0; i < dofs_per_cell;i++){
+            for(int j=0;j<dofs_per_cell;j++){
+                system_matrix_pressure.add(local_dof_indices[i],local_dof_indices[j],cell_matrix(i,j));
+            }
+            system_rhs_pressure(local_dof_indices[i]) += cell_rhs(i);
+        }
     }
 
     std::map<types::global_dof_index, double> boundary_values;

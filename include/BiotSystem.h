@@ -65,7 +65,7 @@ private:
     TestCase test_case;
     // coupling
 
-    double biot_alpha = 0.75;
+    double biot_alpha = 0;
     double K_b = 7./12; //K_b = lambda +2/3*mu
     double biot_inv_M = 3./28;
     double tol_fixed_stress = 1e-5;
@@ -112,7 +112,7 @@ private:
 
     void fixed_stress_iteration();
 
-    double check_fs_convergence(int fs_count); // check the convergence of fixed-stress iteration
+    double check_fs_convergence(); // check the convergence of fixed-stress iteration
 
     void output_displacement(int timestep, int fs_count) const;
     void output_pressure(int timestep, int fs_count) const;
