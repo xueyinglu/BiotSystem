@@ -1,9 +1,14 @@
 #include "BiotSystem.h"
-int main()
+using namespace std;
+int main(int argc, char* argv[])
 {
   try
   {
-    BiotSystem convergence_test(7, 2.5e-4, 0.0101, 1e-4);
+    int _numGlobalRefinement = atoi(argv[1]);
+    double _delT = stod(argv[2]);
+    double _T = stod(argv[3]);
+    double _tol = stod(argv[4]);
+    BiotSystem convergence_test(_numGlobalRefinement, _delT, _T, _tol);
     convergence_test.run_fixed_stress();
   //   BiotSystem u_convergence;
   //   u_convergence.check_disp_solver_convergence();

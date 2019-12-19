@@ -54,6 +54,8 @@ double BiotSystem::check_fs_convergence()
         
         }
     }
-    cout << "fixed stress iteration convergence criteria = " << sqrt(residual/l2square_mean_stress) << endl;
-    return sqrt(residual/l2square_mean_stress);
+    //cout << "fixed stress iteration convergence criteria = " << sqrt(residual/l2square_mean_stress) << endl;
+    cout << "fixed stress iteration convergence criteria = " << sqrt(residual) << endl;
+    // return sqrt(residual/l2square_mean_stress);
+    return sqrt(residual);
 }

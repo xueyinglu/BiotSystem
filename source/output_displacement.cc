@@ -5,7 +5,7 @@ using namespace std;
 
 void BiotSystem::output_displacement(int time, int fs_count) const{
     // ofstream output("displacment-" + to_string(time) + "-" + to_string(fs_count) +".vtk");
-    ofstream output("output/displacment-" + to_string(time) +".vtk");
+    ofstream output("visual/displacment-" + to_string(time) +".vtk");
     vector<string> sol_names;
     sol_names.push_back("x_disp");
     sol_names.push_back("y_disp");

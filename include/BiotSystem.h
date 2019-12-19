@@ -55,6 +55,9 @@ private:
     Vector<double> system_rhs_displacement;
     ConvergenceTable convergence_table;
 
+    vector<double> l2_error_p;
+    vector<double> l2_error_u;
+
     // Data
     double mu_f = 1; // fluid viscosity
     RightHandSide right_hand_side; // mechanics equation body force
@@ -65,7 +68,7 @@ private:
     TestCase test_case;
     // coupling
 
-    double biot_alpha = 0;
+    double biot_alpha = 0.75;
     double K_b = 7./12; //K_b = lambda +2/3*mu
     double biot_inv_M = 3./28;
     double tol_fixed_stress = 1e-5;

@@ -161,14 +161,17 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     data_out.add_data_vector(cell_eta_time, "eta_time", DataOut<dim>::type_dof_data);
     data_out.add_data_vector(cell_eta_E_p, "eta_E_p", DataOut<dim>::type_dof_data);
     data_out.build_patches();
-    ofstream output("output/indicators-p" + to_string(timestep) + ".vtk");
+    ofstream output("visual/indicators-p" + to_string(timestep) + ".vtk");
     data_out.write_vtk(output);
 
     p_indicators_table.add_value("time", t);
-    p_indicators_table.add_value("eta_fs", eta_fs.back());
+    // p_indicators_table.add_value("eta_fs", eta_fs.back());
     p_indicators_table.add_value("eta_alg", eta_alg.back());
     p_indicators_table.add_value("eta_time", eta_time.back());
     p_indicators_table.add_value("eta_flow", eta_flow.back());
-    p_indicators_table.add_value("eta_p_residual", eta_p_residual.back());
-    p_indicators_table.add_value("eta_flux_jump", eta_flux_jump.back());
+    // p_indicators_table.add_value("eta_p_residual", eta_p_residual.back());
+    // p_indicators_table.add_value("eta_flux_jump", eta_flux_jump.back());
+    p_indicators_table.add_value("sum", eta_alg.back() + eta_time.back() +eta_flow.back());
+    p_indicators_table.add_value("error", l2_error_p.back());
+    p_indicators_table.add_value("eff", (eta_alg.back() + eta_time.back() +eta_flow.back())/ l2_error_p.back());
 }

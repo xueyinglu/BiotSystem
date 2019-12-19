@@ -29,7 +29,7 @@ void BiotSystem::plot_error() const{
     data_out.add_data_vector(interpolated_exact_sol, "exact_sol");
     data_out.add_data_vector(error, "error_p");
     data_out.build_patches();
-    ofstream output("output/error-p-" + std::to_string(timestep) +".vtk");
+    ofstream output("visual/error-p-" + std::to_string(timestep) +".vtk");
     data_out.write_vtk(output);
 
     DataOut<dim> data_out_u;
@@ -47,7 +47,7 @@ void BiotSystem::plot_error() const{
     data_out_u.add_data_vector(solution_displacement, u_names);
     data_out_u.add_data_vector(interpolated_exact_sol_u, u_exact_names);
     data_out_u.build_patches();
-    ofstream output_u("output/error-u-" + std::to_string(timestep) +".vtk");
+    ofstream output_u("visual/error-u-" + std::to_string(timestep) +".vtk");
     data_out_u.write_vtk(output_u);
 }
 

@@ -4,15 +4,15 @@ void DisplacementSolution::vector_value(const Point<dim> &p, Vector<double> & va
 {
 
   double k = 0.05;
-  double alpha = 0;
+  double alpha = 0.75;
   double inv_M = 3. / 28;
   double PI = atan(1) * 4;
   double tx = PI *p(0);
   double ty = PI *p(1);
   double x = p(0);
   double y = p(1);
-  // double A = 2 * PI * PI * k / (alpha + inv_M);
-  double A = 0;
+  double A = 2 * PI * PI * k / (alpha + inv_M);
+  //double A = 0;
    values(0) = -exp(-A * t) / (2 * PI) * cos(tx) * sin(ty);
    values(1) = -exp(-A * t) / (2 * PI) * sin(tx) * cos(ty);
 

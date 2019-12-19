@@ -61,7 +61,7 @@ void BiotSystem::assemble_system_displacement()
 
         fe_values_pressure.get_function_values(solution_pressure, pore_pressure_values);
         fe_values_pressure.get_function_gradients(solution_pressure, grad_p_values);
-        initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
+        // initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
         
         // Assemble the cell matrix as in elasticity_cg
         for (unsigned int q = 0; q < n_q_points; ++q)
@@ -89,7 +89,7 @@ void BiotSystem::assemble_system_displacement()
 
                 // assemble cell level rhs as in elasticity_cg
                  cell_rhs(i) += biot_alpha * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
-                 cell_rhs(i) += 0.75 * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
+                 // cell_rhs(i) += 0.75 * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
                 // cell_rhs(i) -= biot_alpha * (grad_p_values[q]*phi_i_u[i])*fe_values.JxW(q);
             }
             
