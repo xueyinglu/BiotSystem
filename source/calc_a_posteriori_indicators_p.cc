@@ -13,7 +13,8 @@ void BiotSystem::calc_a_posteriori_indicators_p()
         dum1 += n;
         dum2 += n * n;
     }
-    eta_alg.push_back(del_t * dum1 * dum1 + h * h * dum2);
+    //eta_alg.push_back(del_t * dum1 * dum1 + h * h * dum2);
+    eta_alg.push_back(del_t * dum1 * dum1);
 
     /* calculate eta_time */
     double eta_t_p_n = 0; // = Del_t /3 * \| k^{1/2} \nabla (p_h^{n,l} - p_h^{n-1})\|_{L2(\Omega)}
