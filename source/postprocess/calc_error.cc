@@ -64,4 +64,5 @@ void BiotSystem::calc_error()
     convergence_table.add_value("energy_u", energy_norm);
     l2_error_p.push_back(L2_norm_pressure);
     l2_error_u.push_back(L2_norm_displacement);
+    energy_error_u.push_back(energy_norm);
 }
