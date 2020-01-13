@@ -57,6 +57,7 @@ private:
 
     vector<double> l2_error_p;
     vector<double> l2_error_u;
+    vector<double> energy_error_u;
 
     // Data
     double mu_f = 1; // fluid viscosity
@@ -100,9 +101,10 @@ private:
     vector<double> eta_face_sigma; //the errors on the tensor at final time
     vector<double> eta_u_n; // the errors on the displacement at time t_n; 
     vector<double> eta_u; // the errors on the displacement at final time
+    vector<double> eta_sum; // the sum of all error indicators
     ConvergenceTable p_indicators_table;
     ConvergenceTable u_indicators_table;
-
+    ConvergenceTable efficiency_table;
 
     void make_grid();
     void setup_system();
@@ -126,6 +128,9 @@ private:
 
     void calc_a_posteriori_indicators_p();
     void calc_a_posteriori_indicators_u();
+
+    double calc_u_energy_norm();
+    void calc_efficiency_indices();
 
 };
 
