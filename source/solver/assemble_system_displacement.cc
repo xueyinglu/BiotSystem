@@ -4,7 +4,7 @@
 #include "AuxTools.h"
 using namespace std;
 void BiotSystem::assemble_system_displacement()
-{   
+{
     system_matrix_displacement.reinit(sparsity_pattern_displacement);
     system_rhs_displacement.reinit(dof_handler_displacement.n_dofs());
     QGauss<dim> quadrature_formula(fe_displacement.degree + 1);
@@ -34,11 +34,11 @@ void BiotSystem::assemble_system_displacement()
     //std::vector<Vector<double>> grad_p_values(n_q_points,
     //                                       Vector<double>(dim));
     std::vector<double> pore_pressure_values(n_q_points);
-    std::vector<Tensor<1, dim>> grad_p_values(n_q_points);
-    Tensor<2,dim> identity = Tensors::get_Identity<dim> ();
+    // std::vector<Tensor<1, dim>> grad_p_values(n_q_points);
+    Tensor<2, dim> identity = Tensors::get_Identity<dim>();
 
     InitialPressure initial_pressure;
-    const FEValuesExtractors::Vector displacements (0);
+    const FEValuesExtractors::Vector displacements(0);
     // Now we can begin with the loop over all cells:
     typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_displacement.begin_active(),
                                                    endc = dof_handler_displacement.end();
@@ -60,9 +60,10 @@ void BiotSystem::assemble_system_displacement()
                                           rhs_values);
 
         fe_values_pressure.get_function_values(solution_pressure, pore_pressure_values);
-        fe_values_pressure.get_function_gradients(solution_pressure, grad_p_values);
+
+        // fe_values_pressure.get_function_gradients(solution_pressure, grad_p_values);
         // initial_pressure.value_list(fe_values_pressure.get_quadrature_points(), pore_pressure_values);
-        
+
         // Assemble the cell matrix as in elasticity_cg
         for (unsigned int q = 0; q < n_q_points; ++q)
         {
@@ -70,11 +71,11 @@ void BiotSystem::assemble_system_displacement()
             std::vector<Tensor<2, dim>> phi_i_grads_u(dofs_per_cell);
             std::vector<Tensor<2, dim>> E_phi(dofs_per_cell);
             std::vector<Tensor<2, dim>> sigma_phi(dofs_per_cell);
-
+            // cout <<"fe_values at quadrature_point q = " << fe_values_pressure.quadrature_point(q) <<endl;
             // Compute and store desired quantities
             for (unsigned int k = 0; k < dofs_per_cell; ++k)
             {
-                phi_i_u[k] =fe_values[displacements].value(k,q);
+                phi_i_u[k] = fe_values[displacements].value(k, q);
                 phi_i_grads_u[k] = fe_values[displacements].gradient(k, q);
                 E_phi[k] = 0.5 * (phi_i_grads_u[k] + transpose(phi_i_grads_u[k]));
                 sigma_phi[k] = 2.0 * mu_values[q] * E_phi[k] + lambda_values[q] * trace(E_phi[k]) * identity;
@@ -88,14 +89,14 @@ void BiotSystem::assemble_system_displacement()
                 }
 
                 // assemble cell level rhs as in elasticity_cg
-                 cell_rhs(i) += biot_alpha * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
-                 // cell_rhs(i) += 0.75 * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
+                    cell_rhs(i) += biot_alpha * pore_pressure_values[q] * trace(phi_i_grads_u[i]) * fe_values.JxW(q);
+
+                // cell_rhs(i) += 0.75 * pore_pressure_values[q] * trace(phi_i_grads_u[i]) *fe_values.JxW(q);
                 // cell_rhs(i) -= biot_alpha * (grad_p_values[q]*phi_i_u[i])*fe_values.JxW(q);
             }
-            
+
         } // end q_point
-        
-        
+
         cell->get_dof_indices(local_dof_indices);
         constraints_displacement.distribute_local_to_global(cell_matrix, local_dof_indices, system_matrix_displacement);
         constraints_displacement.distribute_local_to_global(cell_rhs, local_dof_indices, system_rhs_displacement);
@@ -129,7 +130,7 @@ void BiotSystem::assemble_system_displacement()
                                        solution_displacement,
                                        system_rhs_displacement);
     */
-    
+
     std::map<types::global_dof_index, double> boundary_values;
     VectorTools::interpolate_boundary_values(dof_handler_displacement,
                                              0,
@@ -140,6 +141,4 @@ void BiotSystem::assemble_system_displacement()
                                        system_matrix_displacement,
                                        solution_displacement,
                                        system_rhs_displacement);
-                                       
-    
 }

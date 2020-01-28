@@ -10,8 +10,6 @@ class BiotSystem
 public:
     BiotSystem();
     BiotSystem(int _num_global_refinement, double _del_t, double _T, double _fs_tol);
-    BiotSystem(string testcase, int _num_global_refinement, double _del_t, double _T);
-    BiotSystem(bool _bEG, int _num_global_refinement, double _del_t, double _T);
     // virtual BiotSystem();
     void run_fixed_stress();
     void check_disp_solver_convergence();
@@ -39,7 +37,6 @@ private:
     SparsityPattern sparse_pattern_pressure;
     SparseMatrix<double> system_matrix_pressure;
 
-    bool bEG;
     Vector<double> solution_pressure;
     Vector<double> system_rhs_pressure;
 
@@ -78,6 +75,7 @@ private:
     Vector<double> prev_fs_sol_pressure;
     Vector<double> prev_fs_sol_displacement;
 
+ 
     /* element-wise a posteriori error indicators*/
     DoFHandler<dim> dof_handler_output;
     FESystem<dim> fe_output;
@@ -108,6 +106,7 @@ private:
 
     void make_grid();
     void setup_system();
+    void setup_system_eg();
 
     void assemble_system_pressure();
     void assemble_system_displacement();
