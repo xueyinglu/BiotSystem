@@ -10,6 +10,7 @@ class BiotSystem
 public:
     BiotSystem();
     BiotSystem(int _num_global_refinement, double _del_t, double _T, double _fs_tol);
+    BiotSystem(int _num_global_refinement, double _del_t, double _T, double _fs_tol, int _criteria);
     // virtual BiotSystem();
     void run_fixed_stress();
     void check_disp_solver_convergence();
@@ -66,7 +67,7 @@ private:
 
     TestCase test_case;
     // coupling
-
+    int criteria = 3; // 1: change in mean stress; 2: change in relative mean stress; 3: a posteriori
     double biot_alpha = 0.75;
     double K_b = 7./12; //K_b = lambda +2/3*mu
     double biot_inv_M = 3./28;

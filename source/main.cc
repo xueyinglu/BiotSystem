@@ -8,7 +8,8 @@ int main(int argc, char* argv[])
     double _delT = stod(argv[2]);
     double _T = stod(argv[3]);
     double _tol = stod(argv[4]);
-    BiotSystem convergence_test(_numGlobalRefinement, _delT, _T, _tol);
+    int _criteria = stod(argv[5]);
+    BiotSystem convergence_test(_numGlobalRefinement, _delT, _T, _tol, _criteria);
     convergence_test.run_fixed_stress();
   //   BiotSystem u_convergence;
   //   u_convergence.check_disp_solver_convergence();

@@ -15,7 +15,6 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     }
     //eta_alg.push_back(del_t * dum1 * dum1 + h * h * dum2);
     eta_alg.push_back(del_t * dum1 * dum1);
-
     /* calculate eta_time */
     double eta_t_p_n = 0; // = Del_t /3 * \| k^{1/2} \nabla (p_h^{n,l} - p_h^{n-1})\|_{L2(\Omega)}
     QGauss<dim> quadrature_pressure(fe_pressure.degree + 1);
@@ -166,13 +165,10 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     data_out.write_vtk(output);
 
     p_indicators_table.add_value("time", t);
-    // p_indicators_table.add_value("eta_fs", eta_fs.back());
     p_indicators_table.add_value("eta_alg", eta_alg.back());
     p_indicators_table.add_value("eta_time", eta_time.back());
     p_indicators_table.add_value("eta_flow", eta_flow.back());
-    // p_indicators_table.add_value("eta_p_residual", eta_p_residual.back());
-    // p_indicators_table.add_value("eta_flux_jump", eta_flux_jump.back());
     p_indicators_table.add_value("sum", eta_alg.back() + eta_time.back() +eta_flow.back());
-    p_indicators_table.add_value("error", l2_error_p.back());
-    p_indicators_table.add_value("eff", (eta_alg.back() + eta_time.back() +eta_flow.back())/ l2_error_p.back());
+    // p_indicators_table.add_value("error", l2_error_p.back());
+    // p_indicators_table.add_value("eff", (eta_alg.back() + eta_time.back() +eta_flow.back())/ l2_error_p.back());
 }
