@@ -102,7 +102,7 @@ void BiotSystem::assemble_system_displacement()
         constraints_displacement.distribute_local_to_global(cell_rhs, local_dof_indices, system_rhs_displacement);
     }
 
-    /*
+    
     vector<bool> component_mask;
     component_mask.push_back(false);
     component_mask.push_back(true);
@@ -129,8 +129,8 @@ void BiotSystem::assemble_system_displacement()
                                        system_matrix_displacement,
                                        solution_displacement,
                                        system_rhs_displacement);
-    */
-
+    
+/*  // Apply Dirichlet BC of the true solution
     std::map<types::global_dof_index, double> boundary_values;
     VectorTools::interpolate_boundary_values(dof_handler_displacement,
                                              0,
@@ -141,4 +141,5 @@ void BiotSystem::assemble_system_displacement()
                                        system_matrix_displacement,
                                        solution_displacement,
                                        system_rhs_displacement);
+                                       */
 }

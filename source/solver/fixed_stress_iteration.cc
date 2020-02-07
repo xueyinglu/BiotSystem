@@ -24,5 +24,6 @@ void BiotSystem::fixed_stress_iteration()
         // plot_error(fs_count);
     }
     //TODO: not correct
+    num_fs.push_back(fs_count);
     eta_fs.push_back(1 / sqrt(del_t) * l2_norm);
 }

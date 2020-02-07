@@ -8,6 +8,7 @@ void BiotSystem::calc_efficiency_indices(){
     double I_eff = sqrt(eta_sum.back()/error);
 
     efficiency_table.add_value("time", t);
+    efficiency_table.add_value("num_fs", num_fs.back());
     efficiency_table.add_value("error", error);
     efficiency_table.add_value("eta_sum", eta_sum.back());
     efficiency_table.add_value("index", I_eff);

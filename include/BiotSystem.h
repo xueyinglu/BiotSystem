@@ -55,6 +55,7 @@ private:
     vector<double> l2_error_p;
     vector<double> l2_error_u;
     vector<double> energy_error_u;
+    vector<int> num_fs;
 
     // Data
     double mu_f = 1; // fluid viscosity
