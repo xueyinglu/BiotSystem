@@ -17,8 +17,10 @@ public:
 
     enum TestCase{
         none, 
-        simple,
-        mandel
+        benchmark,
+        mandel,
+        terzaghi,
+        heterogeneous
     };
 
 
@@ -64,8 +66,12 @@ private:
     InitialPressure initial_pressure;
     ConstantFunction<dim> permeability;
     ConstantFunction<dim> lambda, mu;
-
-    TestCase test_case;
+    double pressure_dirichlet_bc;
+    Tensor<1,dim> traction_bc;
+    double lame_lambda;
+    double lame_mu;
+    double perm;
+    TestCase test_case= benchmark;
     // coupling
     int criteria = 3; // 1: change in mean stress; 2: change in relative mean stress; 3: a posteriori
     double biot_alpha = 0.75;
@@ -106,6 +112,7 @@ private:
     ConvergenceTable u_indicators_table;
     ConvergenceTable efficiency_table;
 
+    void set_material_properties();
     void make_grid();
     void setup_system();
     void setup_system_eg();

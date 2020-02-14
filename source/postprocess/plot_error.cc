@@ -1,26 +1,40 @@
 #include "BiotSystem.h"
 #include "PressureSolution.h"
+#include "TerzaghiPressure.h"
 #include "DisplacementSolution.h"
 using namespace std;
-void BiotSystem::plot_error() const{
+void BiotSystem::plot_error() const
+{
     Vector<double> interpolated_exact_sol(dof_handler_pressure.n_dofs());
     Vector<double> error(dof_handler_pressure.n_dofs());
-    VectorTools::interpolate (dof_handler_pressure,
-                              PressureSolution(t),
-                              interpolated_exact_sol);
+    if (test_case == TestCase::benchmark)
+    {
+        VectorTools::interpolate(dof_handler_pressure,
+                                 PressureSolution(t),
+                                 interpolated_exact_sol);
+    }
+    else if (test_case == TestCase::terzaghi)
+    {
+        VectorTools::interpolate(dof_handler_pressure,
+                                 TerzaghiPressure(t),
+                                 interpolated_exact_sol);
+    }
+
     error = interpolated_exact_sol;
     error -= solution_pressure;
-    for (int i = 0; i < error.size(); i++){
+    for (int i = 0; i < error.size(); i++)
+    {
         error[i] = std::abs(error[i]);
     }
     Vector<double> interpolated_exact_sol_u(dof_handler_displacement.n_dofs());
     Vector<double> error_u(dof_handler_displacement.n_dofs());
-    VectorTools::interpolate (dof_handler_displacement,
-                              DisplacementSolution(t),
-                              interpolated_exact_sol_u);
+    VectorTools::interpolate(dof_handler_displacement,
+                             DisplacementSolution(t),
+                             interpolated_exact_sol_u);
     error_u = interpolated_exact_sol_u;
     error_u -= solution_displacement;
-    for (int i = 0; i < error_u.size(); i++){
+    for (int i = 0; i < error_u.size(); i++)
+    {
         error_u[i] = std::abs(error_u[i]);
     }
     DataOut<dim> data_out;
@@ -29,7 +43,7 @@ void BiotSystem::plot_error() const{
     data_out.add_data_vector(interpolated_exact_sol, "exact_sol");
     data_out.add_data_vector(error, "error_p");
     data_out.build_patches();
-    ofstream output("visual/error-p-" + std::to_string(timestep) +".vtk");
+    ofstream output("visual/error-p-" + std::to_string(timestep) + ".vtk");
     data_out.write_vtk(output);
 
     DataOut<dim> data_out_u;
@@ -47,7 +61,6 @@ void BiotSystem::plot_error() const{
     data_out_u.add_data_vector(solution_displacement, u_names);
     data_out_u.add_data_vector(interpolated_exact_sol_u, u_exact_names);
     data_out_u.build_patches();
-    ofstream output_u("visual/error-u-" + std::to_string(timestep) +".vtk");
+    ofstream output_u("visual/error-u-" + std::to_string(timestep) + ".vtk");
     data_out_u.write_vtk(output_u);
 }
-

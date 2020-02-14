@@ -2,10 +2,11 @@
 
 #include "PressureSolution.h"
 #include "DisplacementSolution.h"
+#include "TerzaghiPressure.h"
 using namespace std;
 void BiotSystem::calc_error()
-{
-    Vector<float> difference_per_cell_pressure(triangulation.n_active_cells());
+{   if (test_case == TestCase::benchmark){
+ Vector<float> difference_per_cell_pressure(triangulation.n_active_cells());
     VectorTools::integrate_difference(dof_handler_pressure,
                                       solution_pressure,
                                       PressureSolution(t),
@@ -65,4 +66,25 @@ void BiotSystem::calc_error()
     l2_error_p.push_back(L2_norm_pressure);
     l2_error_u.push_back(L2_norm_displacement);
     energy_error_u.push_back(energy_norm);
+}
+   else if ( test_case == TestCase::terzaghi){
+        Vector<float> difference_per_cell_pressure(triangulation.n_active_cells());
+    VectorTools::integrate_difference(dof_handler_pressure,
+                                      solution_pressure,
+                                      TerzaghiPressure(t),
+                                      difference_per_cell_pressure,
+                                      QGauss<dim>(fe_pressure.degree + 2),
+                                      VectorTools::L2_norm);
+    double L2_norm_pressure = difference_per_cell_pressure.l2_norm();
+
+
+   
+
+    convergence_table.add_value("time", t);
+    convergence_table.add_value("1/h", 1./h);
+    convergence_table.add_value("L2_p", L2_norm_pressure);
+    convergence_table.add_value("L2_u", 0);
+    convergence_table.add_value("energy_u", 0);
+    
+   }
 }
