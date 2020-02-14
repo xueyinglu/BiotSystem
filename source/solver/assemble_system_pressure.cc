@@ -1,7 +1,6 @@
 #include "BiotSystem.h"
 #include "AuxTools.h"
 #include "TerzaghiPressure.h"
-#include "PermFunction.h"
 using namespace std;
 void BiotSystem::assemble_system_pressure()
 {
@@ -25,7 +24,6 @@ void BiotSystem::assemble_system_pressure()
     vector<vector<Tensor<1, dim>>> prev_fs_sol_grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
     double prev_timestep_mean_stress;
     double prev_fs_mean_stress;
-    PermFunction perm_function;
     typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_pressure.begin_active(),
                                                    endc = dof_handler_pressure.end();
 

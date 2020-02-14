@@ -43,8 +43,8 @@ BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T, dou
     del_t = _del_t;
     T = _T;
     h = 1. / std::pow(2, num_global_refinement);
-    // test_case = TestCase::benchmark;
-    test_case = TestCase::heterogeneous;
+    test_case = TestCase::terzaghi;
+    // test_case = TestCase::heterogeneous;
     tol_fixed_stress = _fs_tol;
     criteria = _criteria;
 }
