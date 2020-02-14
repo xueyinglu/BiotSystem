@@ -3,6 +3,13 @@
 #include "DealiiHeader.h"
 #include "InitialPressure.h"
 #include "RightHandSide.h"
+#include "PermFunction.h"
+#include "LambdaFunction.h"
+#include "MuFunction.h"
+namespace LA
+{
+using namespace dealii::LinearAlgebraTrilinos;
+}
 using namespace dealii;
 using namespace std;
 class BiotSystem
@@ -66,6 +73,9 @@ private:
     InitialPressure initial_pressure;
     ConstantFunction<dim> permeability;
     ConstantFunction<dim> lambda, mu;
+    PermFunction perm_function;
+    LambdaFunction lambda_function;
+    MuFunction mu_function;
     double pressure_dirichlet_bc;
     Tensor<1,dim> traction_bc;
     double lame_lambda;
@@ -87,10 +97,9 @@ private:
     /* element-wise a posteriori error indicators*/
     DoFHandler<dim> dof_handler_output;
     FESystem<dim> fe_output;
-    Vector<double> cell_eta_time;
-    Vector<double> cell_eta_E_p;
-    Vector<double> cell_eta_E_partial_u;
-    Vector<double> cell_eta_E_u;
+    Vector<double> cell_eta_p;
+    Vector<double> cell_eta_u;
+
     /* global a posteriori error estimators (recorded for each time step) */
     vector<double> eta_fs;
     vector<double> eta_alg;
