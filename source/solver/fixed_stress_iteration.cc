@@ -35,12 +35,12 @@ void BiotSystem::fixed_stress_iteration()
                 eta_alg.pop_back();
                 eta_flow.pop_back();
                 eta_time.pop_back();
-                eta_p_residual.pop_back();
-                eta_flux_jump.pop_back();
                 eta_face_partial_sigma_n.pop_back();
+                eta_N_partial_sigma_n.pop_back();
                 eta_face_partial_sigma.pop_back();
                 eta_face_sigma.pop_back();
                 eta_face_sigma_n.pop_back();
+                eta_N_sigma_n.pop_back();
                 eta_u.pop_back();
                 eta_u_n.pop_back();
 

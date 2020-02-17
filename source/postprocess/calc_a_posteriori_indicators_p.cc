@@ -5,7 +5,7 @@ using namespace std;
 
 void BiotSystem::calc_a_posteriori_indicators_p()
 {
-    /* calculate eta_alg */
+    /************************** calculate eta_alg ****************************/
     double dum1 = 0;
     double dum2 = 0;
     for (auto &n : eta_fs)
@@ -15,27 +15,47 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     }
     //eta_alg.push_back(del_t * dum1 * dum1 + h * h * dum2);
     eta_alg.push_back(del_t * dum1 * dum1);
-    /* calculate eta_time */
+    
+    /*************************** calculate integrals on the elements ***************************/
+    // see notes for details of these local notations
     double eta_t_p_n = 0; // = Del_t /3 * \| k^{1/2} \nabla (p_h^{n,l} - p_h^{n-1})\|_{L2(\Omega)}
+    double eta_E_p_n = 0;
+    cell_eta_p = 0;
     QGauss<dim> quadrature_pressure(fe_pressure.degree + 1);
     FEValues<dim> fe_value_pressure(fe_pressure, quadrature_pressure,
                                     update_values | update_quadrature_points | update_gradients | update_hessians | update_JxW_values);
+    QGauss<dim> quadrature_displacement(fe_displacement.degree + 1);
+    FEValues<dim> fe_value_displacement(fe_displacement, quadrature_displacement,
+                                        update_values | update_quadrature_points | update_gradients | update_JxW_values);
     typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_pressure.begin_active(),
                                                    endc = dof_handler_pressure.end();
+    typename DoFHandler<dim>::active_cell_iterator
+        cell_displacement = dof_handler_displacement.begin_active();
     typename DoFHandler<dim>::active_cell_iterator cell_output = dof_handler_output.begin_active();
     const unsigned int n_q_points = quadrature_pressure.size();
     vector<Tensor<1, dim>> grad_p_values(n_q_points);
     vector<Tensor<1, dim>> prev_timestep_grad_p_values(n_q_points);
     vector<double> permeability_values(n_q_points);
+    
+    vector<vector<Tensor<1, dim>>> prev_timestep_grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
+    vector<vector<Tensor<1, dim>>> grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
+    vector<double> prev_timestep_p_values(n_q_points);
+    vector<double> p_values(n_q_points);
+    vector<double> laplacian_p_values(n_q_points);
 
     vector<types::global_dof_index> output_dofs(dof_handler_output.get_fe().dofs_per_cell);
-    cell_eta_p = 0;
-    for (; cell != endc; ++cell, ++cell_output)
+    for (; cell != endc; ++cell, ++ cell_displacement, ++cell_output)
     {
-        fe_value_pressure.reinit(cell);
-        fe_value_pressure.get_function_gradients(solution_pressure, grad_p_values);
         cell_output->get_dof_indices(output_dofs);
+        fe_value_pressure.reinit(cell);
+        fe_value_displacement.reinit(cell_displacement);
+        fe_value_pressure.get_function_gradients(solution_pressure, grad_p_values);
         fe_value_pressure.get_function_gradients(prev_timestep_sol_pressure, prev_timestep_grad_p_values);
+        fe_value_pressure.get_function_values(solution_pressure, p_values);
+        fe_value_pressure.get_function_values(prev_timestep_sol_pressure, prev_timestep_p_values);
+        fe_value_pressure.get_function_laplacians(solution_pressure, laplacian_p_values);
+        fe_value_displacement.get_function_gradients(solution_displacement, grad_u_values);
+        fe_value_displacement.get_function_gradients(prev_timestep_sol_displacement, prev_timestep_grad_u_values);
         permeability.value_list(fe_value_pressure.get_quadrature_points(), permeability_values);
         for (unsigned int q = 0; q < n_q_points; q++)
         {
@@ -46,6 +66,11 @@ void BiotSystem::calc_a_posteriori_indicators_p()
             cell_eta_p[output_dofs[0]] += permeability_values[q] *
                                           cell_difference.norm_square() *
                                           fe_value_pressure.JxW(q);
+            // TODO: extension to non constant permeability
+            double cell_residual = 1 / mu_f * permeability_values[q] * laplacian_p_values[q] - biot_inv_M / del_t * (p_values[q] - prev_timestep_p_values[q]) - biot_alpha / del_t * (grad_u_values[q][0][0] + grad_u_values[q][1][1] - prev_timestep_grad_u_values[q][0][0] - prev_timestep_grad_u_values[q][1][1]);
+            // cout << "cell residual = " << cell_residual << endl;
+            eta_E_p_n += cell_residual * cell_residual * fe_value_pressure.JxW(q);
+            cell_eta_p[output_dofs[0]] += cell_residual * cell_residual * fe_value_pressure.JxW(q);
         }
     }
     eta_t_p_n = eta_t_p_n * del_t / 3;
@@ -59,51 +84,12 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     }
     cout << "Line 60" << endl;
 
-    /* calculate eta_p_residual, eta_flux_jump, eta_flow */
 
-    double eta_flow_n = 0;
-    double eta_E_p = 0;
-    // residual at cells
-    QGauss<dim> quadrature_displacement(fe_displacement.degree + 1);
-    FEValues<dim> fe_value_displacement(fe_displacement, quadrature_displacement,
-                                        update_values | update_quadrature_points | update_gradients | update_JxW_values);
-    vector<vector<Tensor<1, dim>>> prev_timestep_grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
-    vector<vector<Tensor<1, dim>>> grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
 
-    vector<double> prev_timestep_p_values(n_q_points);
-    vector<double> p_values(n_q_points);
-    vector<double> laplacian_p_values(n_q_points);
-    cell = dof_handler_pressure.begin_active();
-    cell_output = dof_handler_output.begin_active();
-    typename DoFHandler<dim>::active_cell_iterator
-        cell_displacement = dof_handler_displacement.begin_active();
-    for (; cell != endc; ++cell, ++cell_displacement, ++cell_output)
-    {
-        fe_value_pressure.reinit(cell);
-        fe_value_displacement.reinit(cell_displacement);
-        fe_value_pressure.get_function_values(solution_pressure, p_values);
-        fe_value_pressure.get_function_values(prev_timestep_sol_pressure, prev_timestep_p_values);
-        fe_value_pressure.get_function_laplacians(solution_pressure, laplacian_p_values);
-        fe_value_displacement.get_function_gradients(solution_displacement, grad_u_values);
-        fe_value_displacement.get_function_gradients(prev_timestep_sol_displacement, prev_timestep_grad_u_values);
-        permeability.value_list(fe_value_pressure.get_quadrature_points(), permeability_values);
+    eta_E_p_n = eta_E_p_n * h * h * del_t;
 
-        cell_output->get_dof_indices(output_dofs);
-        for (unsigned int q = 0; q < n_q_points; q++)
-        {
-            // TODO: extension to non constant permeability
-            double cell_residual = 1 / mu_f * permeability_values[q] * laplacian_p_values[q] - biot_inv_M / del_t * (p_values[q] - prev_timestep_p_values[q]) - biot_alpha / del_t * (grad_u_values[q][0][0] + grad_u_values[q][1][1] - prev_timestep_grad_u_values[q][0][0] - prev_timestep_grad_u_values[q][1][1]);
-            // cout << "cell residual = " << cell_residual << endl;
-            eta_E_p += cell_residual * cell_residual * fe_value_pressure.JxW(q);
-            cell_eta_p[output_dofs[0]] += cell_residual * cell_residual * fe_value_pressure.JxW(q);
-        }
-    }
-
-    eta_E_p = eta_E_p * h * h * del_t;
-    eta_p_residual.push_back(eta_E_p);
-
-    // jump of flux at cell boundaries.
-    double eta_flux_e = 0;
+   /*************************** calculate integrals on the edges ***************************/ 
+    double eta_flux_e_n = 0;
     QGauss<dim - 1> face_quadrature(fe_pressure.degree + 1);
     // const unsigned int n_face_q_points = face_quadrature.size();
     FEFaceValues<dim> fe_face_values(fe_pressure, face_quadrature,
@@ -141,22 +127,20 @@ void BiotSystem::calc_a_posteriori_indicators_p()
                     const Tensor<1, dim> &n = fe_face_values.normal_vector(q);
                     // TODO: extension to when permeability changes over the face
                     double jump = face_perm_values[q] * (face_grad_p_values[q] * n - neighbor_grad_p_values[q] * n);
-                    eta_flux_e += jump * jump * fe_face_values.JxW(q);
+                    eta_flux_e_n += jump * jump * fe_face_values.JxW(q);
                     cell_eta_p[output_dofs[0]] += jump * jump * fe_face_values.JxW(q);
                 }
             }
         }
     }
-    eta_flux_e = eta_flux_e * h * del_t;
-    eta_flux_jump.push_back(eta_flux_e);
-    eta_flow_n = eta_E_p + eta_flux_e;
+    eta_flux_e_n = eta_flux_e_n * h * del_t;
     if (timestep == 1)
     {
-        eta_flow.push_back(eta_flow_n);
+        eta_flow.push_back(eta_E_p_n + eta_flux_e_n);
     }
     else
     {
-        eta_flow.push_back(eta_flow.back() + eta_flow_n);
+        eta_flow.push_back(eta_flow.back() + eta_E_p_n + eta_flux_e_n);
     }
 
     cout << "Line 161" << endl;
