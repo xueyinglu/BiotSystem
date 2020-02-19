@@ -94,11 +94,18 @@ private:
     Vector<double> prev_fs_sol_displacement;
 
  
-    /* element-wise a posteriori error indicators*/
+    /* DOF handler for element-wise variables*/
     DoFHandler<dim> dof_handler_output;
     FESystem<dim> fe_output;
     Vector<double> cell_eta_p;
     Vector<double> cell_eta_u;
+    Vector<double> cell_stress_xx;
+    Vector<double> cell_stress_xy;
+    Vector<double> cell_stress_yy;
+    Vector<double> cell_strain_xx;
+    Vector<double> cell_strain_xy;
+    Vector<double> cell_strain_yy;
+    Vector<double> cell_vstrain;
 
     /* global a posteriori error estimators (recorded for each time step) */
     vector<double> eta_fs;
@@ -143,6 +150,7 @@ private:
     //void process_solution(int fs_count); // compute the errors
     void plot_error() const;
 
+    void calc_strain_stress();
     void calc_a_posteriori_indicators_p();
     void calc_a_posteriori_indicators_u();
 
