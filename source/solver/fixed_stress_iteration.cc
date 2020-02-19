@@ -46,9 +46,6 @@ void BiotSystem::fixed_stress_iteration()
 
             }
         }
-
-        // process_solution(fs_count);
-        // plot_error(fs_count);
     }
     num_fs.push_back(fs_count);
     //TODO: If convergence criteria = 2 this is not correct
