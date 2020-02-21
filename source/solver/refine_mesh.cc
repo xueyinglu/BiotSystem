@@ -9,7 +9,13 @@ void BiotSystem::refine_mesh()
                                                       0.6,
                                                       0.4);
                                                       */
-    GridRefinement::refine_and_coarsen_fixed_number(triangulation, cell_eta_p,0.1, 0.4);                                                 
+    //GridRefinement::refine_and_coarsen_fixed_number(triangulation, cell_eta_p,0.1, 0.4);                                                 
+    Vector<double> cell_eta_refine = cell_eta_p;
+    cell_eta_refine/= cell_eta_p.linfty_norm();
+    Vector<double> dum = cell_eta_u;
+    dum /= cell_eta_u.linfty_norm();
+    cell_eta_refine += dum;
+    GridRefinement::refine_and_coarsen_fixed_number(triangulation, cell_eta_refine,0.1, 0.4);                                                 
     const unsigned int max_grid_level = 9;
     const unsigned int min_grid_level = 3;
     if (triangulation.n_levels() > max_grid_level)
