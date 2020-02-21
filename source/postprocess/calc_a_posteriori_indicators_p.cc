@@ -15,7 +15,7 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     }
     //eta_alg.push_back(del_t * dum1 * dum1 + h * h * dum2);
     eta_alg.push_back(del_t * dum1 * dum1);
-    
+
     /*************************** calculate integrals on the elements ***************************/
     // see notes for details of these local notations
     double eta_t_p_n = 0; // = Del_t /3 * \| k^{1/2} \nabla (p_h^{n,l} - p_h^{n-1})\|_{L2(\Omega)}
@@ -36,7 +36,7 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     vector<Tensor<1, dim>> grad_p_values(n_q_points);
     vector<Tensor<1, dim>> prev_timestep_grad_p_values(n_q_points);
     vector<double> permeability_values(n_q_points);
-    
+
     vector<vector<Tensor<1, dim>>> prev_timestep_grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
     vector<vector<Tensor<1, dim>>> grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
     vector<double> prev_timestep_p_values(n_q_points);
@@ -44,7 +44,7 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     vector<double> laplacian_p_values(n_q_points);
 
     vector<types::global_dof_index> output_dofs(dof_handler_output.get_fe().dofs_per_cell);
-    for (; cell != endc; ++cell, ++ cell_displacement, ++cell_output)
+    for (; cell != endc; ++cell, ++cell_displacement, ++cell_output)
     {
         cell_output->get_dof_indices(output_dofs);
         fe_value_pressure.reinit(cell);
@@ -84,23 +84,23 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     }
     cout << "Line 60" << endl;
 
-
-
     eta_E_p_n = eta_E_p_n * h * h * del_t;
 
-   /*************************** calculate integrals on the edges ***************************/ 
+    /*************************** calculate integrals on the edges ***************************/
     double eta_flux_e_n = 0;
     QGauss<dim - 1> face_quadrature(fe_pressure.degree + 1);
     // const unsigned int n_face_q_points = face_quadrature.size();
     FEFaceValues<dim> fe_face_values(fe_pressure, face_quadrature,
                                      update_values | update_normal_vectors | update_gradients | update_quadrature_points | update_JxW_values);
+    FESubfaceValues<dim> fe_subface_values(fe_pressure, face_quadrature,
+                                        update_values | update_normal_vectors | update_gradients | update_quadrature_points | update_JxW_values);
     FEFaceValues<dim> fe_face_values_neighbor(fe_pressure, face_quadrature,
                                               update_values | update_gradients | update_quadrature_points | update_JxW_values);
 
     // vector<Tensor<1, dim>> face_grad_p_values(n_face_q_points);
     cell = dof_handler_pressure.begin_active();
     cell_output = dof_handler_output.begin_active();
-    for (; cell != endc; ++cell,++cell_output)
+    for (; cell != endc; ++cell, ++cell_output)
     {
         cell_output->get_dof_indices(output_dofs);
         fe_value_pressure.reinit(cell);
@@ -111,24 +111,84 @@ void BiotSystem::calc_a_posteriori_indicators_p()
             {
                 Assert(cell->neighbor(face_no).state() == IteratorState::valid, ExcInternalError());
                 const auto neighbor = cell->neighbor(face_no);
-                vector<Tensor<1, dim>> face_grad_p_values(fe_face_values.n_quadrature_points);
-                vector<Tensor<1, dim>> neighbor_grad_p_values(fe_face_values.n_quadrature_points);
-                vector<double> face_perm_values(fe_face_values.n_quadrature_points);
-                const unsigned int neighbor_face = cell->neighbor_of_neighbor(face_no);
-                fe_face_values.reinit(cell, face_no);
-                fe_face_values_neighbor.reinit(neighbor, neighbor_face);
-                fe_face_values.get_function_gradients(solution_pressure, face_grad_p_values);
-                fe_face_values_neighbor.get_function_gradients(solution_pressure, neighbor_grad_p_values);
-                permeability.value_list(fe_face_values.get_quadrature_points(), face_perm_values);
-                // vector<Point<dim>> v_normal1 =fe_face_values.get_normal_vectors();
-                // vector<Point<dim>> v_normal2 =fe_face_values_neighbor.get_normal_vectors();
-                for (unsigned int q = 0; q < fe_face_values.n_quadrature_points; q++)
+                if (cell->face(face_no)->has_children())
                 {
-                    const Tensor<1, dim> &n = fe_face_values.normal_vector(q);
-                    // TODO: extension to when permeability changes over the face
-                    double jump = face_perm_values[q] * (face_grad_p_values[q] * n - neighbor_grad_p_values[q] * n);
-                    eta_flux_e_n += jump * jump * fe_face_values.JxW(q);
-                    cell_eta_p[output_dofs[0]] += jump * jump * fe_face_values.JxW(q);
+                    const unsigned int neighbor2 = cell->neighbor_face_no(face_no);
+
+                    for (unsigned int subface_no = 0;
+                         subface_no < cell->face(face_no)->number_of_children();
+                         ++subface_no)
+                    {
+                        //Get Neighbor Child
+                        typename DoFHandler<dim>::cell_iterator neighbor_child = cell->neighbor_child_on_subface(face_no, subface_no);
+
+                        Assert(!neighbor_child->has_children(), ExcInternalError());
+
+                        fe_subface_values.reinit(cell, face_no, subface_no);
+                        fe_face_values_neighbor.reinit(neighbor_child, neighbor2);
+
+                        vector<Tensor<1, dim>> face_grad_p_values(fe_subface_values.n_quadrature_points);
+                        vector<Tensor<1, dim>> neighbor_grad_p_values(fe_face_values_neighbor.n_quadrature_points);
+                        vector<double> face_perm_values(fe_subface_values.n_quadrature_points);
+                        fe_subface_values.get_function_gradients(solution_pressure, face_grad_p_values);
+                        fe_face_values_neighbor.get_function_gradients(solution_pressure, neighbor_grad_p_values);
+                        permeability.value_list(fe_subface_values.get_quadrature_points(), face_perm_values);
+                        for (unsigned int q = 0; q < fe_subface_values.n_quadrature_points; ++q)
+                        {
+                            const Tensor<1, dim> &n = fe_subface_values.normal_vector(q);
+                            // TODO: extension to when permeability changes over the face
+                            double jump = face_perm_values[q] * (face_grad_p_values[q] * n - neighbor_grad_p_values[q] * n);
+                            eta_flux_e_n += jump * jump * fe_subface_values.JxW(q);
+                            cell_eta_p[output_dofs[0]] += jump * jump * fe_subface_values.JxW(q);
+                        }
+                    }
+                }
+                else if (!cell->neighbor_is_coarser(face_no))
+                {
+                    vector<Tensor<1, dim>> face_grad_p_values(fe_face_values.n_quadrature_points);
+                    vector<Tensor<1, dim>> neighbor_grad_p_values(fe_face_values.n_quadrature_points);
+                    vector<double> face_perm_values(fe_face_values.n_quadrature_points);
+                    const unsigned int neighbor_face = cell->neighbor_of_neighbor(face_no);
+                    fe_face_values.reinit(cell, face_no);
+                    fe_face_values_neighbor.reinit(neighbor, neighbor_face);
+                    fe_face_values.get_function_gradients(solution_pressure, face_grad_p_values);
+                    fe_face_values_neighbor.get_function_gradients(solution_pressure, neighbor_grad_p_values);
+                    permeability.value_list(fe_face_values.get_quadrature_points(), face_perm_values);
+                    for (unsigned int q = 0; q < fe_face_values.n_quadrature_points; q++)
+                    {
+                        const Tensor<1, dim> &n = fe_face_values.normal_vector(q);
+                        // TODO: extension to when permeability changes over the face
+                        double jump = face_perm_values[q] * (face_grad_p_values[q] * n - neighbor_grad_p_values[q] * n);
+                        eta_flux_e_n += jump * jump * fe_face_values.JxW(q);
+                        cell_eta_p[output_dofs[0]] += jump * jump * fe_face_values.JxW(q);
+                    }
+                }
+                else
+                {
+                    std::pair<unsigned int, unsigned int> neighbor_face_subface = cell->neighbor_of_coarser_neighbor(face_no);
+
+                    Assert(neighbor_face_subface.first < GeometryInfo<dim>::faces_per_cell, ExcInternalError());
+                    Assert(neighbor_face_subface.second < neighbor->face(neighbor_face_subface.first)->number_of_children(), ExcInternalError());
+                    Assert(neighbor->neighbor_child_on_subface(neighbor_face_subface.first, neighbor_face_subface.second) == cell, ExcInternalError());
+
+                    fe_face_values.reinit(cell, face_no);
+
+                    fe_subface_values.reinit(neighbor, neighbor_face_subface.first,
+                                             neighbor_face_subface.second);
+                    vector<Tensor<1, dim>> face_grad_p_values(fe_face_values.n_quadrature_points);
+                    vector<Tensor<1, dim>> neighbor_grad_p_values(fe_subface_values.n_quadrature_points);
+                    vector<double> face_perm_values(fe_face_values.n_quadrature_points);
+                    fe_face_values.get_function_gradients(solution_pressure, face_grad_p_values);
+                    fe_subface_values.get_function_gradients(solution_pressure, neighbor_grad_p_values);
+                    permeability.value_list(fe_face_values.get_quadrature_points(), face_perm_values);
+                    for (unsigned int q = 0; q < fe_face_values.n_quadrature_points; q++)
+                    {
+                        const Tensor<1, dim> &n = fe_face_values.normal_vector(q);
+                        // TODO: extension to when permeability changes over the face
+                        double jump = face_perm_values[q] * (face_grad_p_values[q] * n - neighbor_grad_p_values[q] * n);
+                        eta_flux_e_n += jump * jump * fe_face_values.JxW(q);
+                        cell_eta_p[output_dofs[0]] += jump * jump * fe_face_values.JxW(q);
+                    }
                 }
             }
         }
