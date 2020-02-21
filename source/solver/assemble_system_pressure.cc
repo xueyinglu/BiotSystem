@@ -6,7 +6,7 @@ void BiotSystem::assemble_system_pressure()
 {
     system_matrix_pressure.reinit(sparse_pattern_pressure);
     system_rhs_pressure.reinit(dof_handler_pressure.n_dofs());
-    QGauss<dim> quadrature(fe_pressure.degree + 1);
+    QGauss<dim> quadrature(fe_pressure.degree + 2);
     FEValues<dim> fe_value(fe_pressure,
                            quadrature, update_values | update_quadrature_points | update_gradients | update_JxW_values);
     FEValues<dim> fe_value_displacement(fe_displacement,
@@ -32,7 +32,7 @@ void BiotSystem::assemble_system_pressure()
     for (; cell != endc; ++cell, ++cell_displacement)
     {
         if (cell->is_locally_owned())
-        {
+        {   
             fe_value.reinit(cell);
             fe_value_displacement.reinit(cell_displacement);
             cell_matrix = 0;

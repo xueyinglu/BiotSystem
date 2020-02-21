@@ -123,7 +123,6 @@ void BiotSystem::calc_a_posteriori_indicators_u()
                 }
                 else if (!cell->neighbor_is_coarser(face_no))
                 {
-                    cout << "line 128" << endl;
                     const typename DoFHandler<dim>::cell_iterator neighbor_p = cell->neighbor(face_no);
                     const typename DoFHandler<dim>::cell_iterator neighbor_u = cell_u->neighbor(face_no);
                     vector<vector<Tensor<1, dim>>> face_grad_u_values(fe_face_u.n_quadrature_points, vector<Tensor<1, dim>>(dim));
@@ -196,7 +195,6 @@ void BiotSystem::calc_a_posteriori_indicators_u()
                         eta_e_sigma += dum6.norm_square() * fe_face_p.JxW(q);
                         cell_eta_u[output_dofs[0]] += dum6.norm_square() * fe_face_p.JxW(q);
                     }
-                    cout << "line 199" << endl;
                 }
 
                 else

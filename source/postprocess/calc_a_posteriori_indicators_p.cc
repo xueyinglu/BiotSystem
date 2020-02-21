@@ -82,7 +82,6 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     {
         eta_time.push_back(eta_time.back() + eta_t_p_n);
     }
-    cout << "Line 60" << endl;
 
     eta_E_p_n = eta_E_p_n * h * h * del_t;
 
@@ -203,7 +202,6 @@ void BiotSystem::calc_a_posteriori_indicators_p()
         eta_flow.push_back(eta_flow.back() + eta_E_p_n + eta_flux_e_n);
     }
 
-    cout << "Line 161" << endl;
     DataOut<dim> data_out;
     data_out.attach_dof_handler(dof_handler_output);
     data_out.add_data_vector(cell_eta_p, "eta_E_p", DataOut<dim>::type_dof_data);
