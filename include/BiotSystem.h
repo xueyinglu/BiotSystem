@@ -70,13 +70,14 @@ private:
     // Data
     double mu_f = 1; // fluid viscosity
     RightHandSide right_hand_side; // mechanics equation body force
-    InitialPressure initial_pressure;
+    //InitialPressure initial_pressure;
     ConstantFunction<dim> permeability;
     ConstantFunction<dim> lambda, mu;
     PermFunction perm_function;
     LambdaFunction lambda_function;
     MuFunction mu_function;
     double pressure_dirichlet_bc;
+    double initial_pressure;
     Tensor<1,dim> traction_bc;
     double lame_lambda;
     double lame_mu;
@@ -128,11 +129,11 @@ private:
     ConvergenceTable u_indicators_table;
     ConvergenceTable efficiency_table;
 
-    void set_material_properties();
+
     void make_grid();
     void setup_system();
-    void setup_system_eg();
-
+    void set_material_properties();
+    void refine_mesh();
     void assemble_system_pressure();
     void assemble_system_displacement();
 
