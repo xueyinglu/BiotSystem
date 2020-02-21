@@ -5,5 +5,5 @@ void BiotSystem::solve_pressure(){
     PreconditionSSOR<> preconditioner;
     preconditioner.initialize(system_matrix_pressure, 1.2);
     solver.solve(system_matrix_pressure, solution_pressure, system_rhs_pressure, preconditioner);
-    //constraints_pressure.distribute(solution_pressure);
+    constraints_pressure.distribute(solution_pressure);
 }
