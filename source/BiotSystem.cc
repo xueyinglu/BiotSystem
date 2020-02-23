@@ -47,4 +47,5 @@ BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T, dou
     test_case = TestCase::heterogeneous;
     tol_fixed_stress = _fs_tol;
     criteria = _criteria;
+    adaptivity = true;
 }

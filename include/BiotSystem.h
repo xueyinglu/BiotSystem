@@ -38,7 +38,7 @@ private:
     int timestep = 0;
     int num_global_refinement = 5;
     double h = 1./pow(2,num_global_refinement);
-
+    bool adaptivity = false;
     Triangulation<dim> triangulation;
     // pressure solution
     FESystem<dim> fe_pressure;

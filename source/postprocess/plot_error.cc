@@ -73,8 +73,17 @@ void BiotSystem::plot_error() const
         data_out.attach_dof_handler(dof_handler_pressure);
         data_out.add_data_vector(solution_pressure, "p");
         data_out.build_patches();
-        ofstream output("visual/a-sol-p-" + std::to_string(timestep) + ".vtk");
-        data_out.write_vtk(output);
+        if (adaptivity == true)
+        {
+            ofstream output("visual/a-sol-p-" + std::to_string(timestep) + ".vtk");
+            data_out.write_vtk(output);
+        }
+        else
+        {
+            ofstream output("visual/sol-p-" + std::to_string(timestep) + ".vtk");
+            data_out.write_vtk(output);
+        }
+
         DataOut<dim> data_out_u;
         data_out_u.attach_dof_handler(dof_handler_displacement);
         vector<string> u_names;
@@ -82,9 +91,15 @@ void BiotSystem::plot_error() const
         u_names.push_back("u_y");
         data_out_u.add_data_vector(solution_displacement, u_names);
         data_out_u.build_patches();
-        ofstream output_u("visual/a-sol-u-" + std::to_string(timestep) + ".vtk");
-        data_out_u.write_vtk(output_u);
+        if (adaptivity == true)
+        {
+            ofstream output_u("visual/a-sol-u-" + std::to_string(timestep) + ".vtk");
+            data_out_u.write_vtk(output_u);
+        }
+        else
+        {
+            ofstream output_u("visual/sol-u-" + std::to_string(timestep) + ".vtk");
+            data_out_u.write_vtk(output_u);
+        }
     }
-
-
 }
