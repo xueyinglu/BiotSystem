@@ -32,7 +32,7 @@ void BiotSystem::assemble_system_pressure()
     for (; cell != endc; ++cell, ++cell_displacement)
     {
         if (cell->is_locally_owned())
-        {   
+        {
             fe_value.reinit(cell);
             fe_value_displacement.reinit(cell_displacement);
             cell_matrix = 0;
@@ -81,11 +81,22 @@ void BiotSystem::assemble_system_pressure()
                             ((biot_inv_M + biot_alpha * biot_alpha / K_b) *                              // (1/M + alpha^2/K_b)/del_t
                              fe_value.shape_value(i, q) * fe_value.shape_value(j, q) * fe_value.JxW(q)); // phi(x_q)*phi(x_q) dx
                     }
-                    // source term
-                    //cell_rhs(i) +=
-                    //    (fe_value.shape_value(i, q) * // phi_i(x_q)
-                    //     1 *                          // f(x_q)
-                    //     fe_value.JxW(q));            // dx
+                    if (test_case == TestCase::heterogeneous)
+                    {
+                        // add a well term
+                        Point<2> well1 = Point<2>(0.5, 0.25 - 1. / 128);
+                        Point<2> well2 = Point<2>(0.5, 0.5 - 1. / 128);
+                        Point<2> well3 = Point<2>(0.5, 0.75 - 1. / 128);
+                        if (fe_value.quadrature_point(q).distance(well1) < 1. / 128 ||
+                            fe_value.quadrature_point(q).distance(well2) < 1. / 128 ||
+                            fe_value.quadrature_point(q).distance(well3) < 1. / 128)
+                        {
+                            cell_rhs(i) +=
+                                (fe_value.shape_value(i, q) * // phi_i(x_q)
+                                 -2000 *                          // f(x_q)
+                                 fe_value.JxW(q));            // dx
+                        }
+                    }
 
                     // prev time step
                     cell_rhs(i) +=
