@@ -72,13 +72,13 @@ void BiotSystem::assemble_system_pressure()
                     {
                         // elliptic part
                         cell_matrix(i, j) +=
-                            (del_t / mu_f * permeability_values[q] * // 1/mu_f * k
+                            (1.0/ mu_f * permeability_values[q] * // 1/mu_f * k
                              fe_value.shape_grad(i, q) *             // grad phi_i(x_q)
                              fe_value.shape_grad(j, q) *             // grad phi_j(x_q)
                              fe_value.JxW(q));                       // dx
                         // parabolic part
                         cell_matrix(i, j) +=
-                            ((biot_inv_M + biot_alpha * biot_alpha / K_b) *                              // (1/M + alpha^2/K_b)/del_t
+                            ((biot_inv_M + biot_alpha * biot_alpha / K_b)/del_t *                              // (1/M + alpha^2/K_b)/del_t
                              fe_value.shape_value(i, q) * fe_value.shape_value(j, q) * fe_value.JxW(q)); // phi(x_q)*phi(x_q) dx
                     }
                     if (test_case == TestCase::heterogeneous)
@@ -100,14 +100,14 @@ void BiotSystem::assemble_system_pressure()
 
                     // prev time step
                     cell_rhs(i) +=
-                        ((biot_inv_M + biot_alpha * biot_alpha / K_b) * // (1/M + alpha^2/K_b)/del_t
+                        ((biot_inv_M + biot_alpha * biot_alpha / K_b)/del_t * // (1/M + alpha^2/K_b)/del_t
                          prev_timestep_sol_pressure_values[q] *
                          fe_value.shape_value(i, q) * fe_value.JxW(q));
 
                     // change in mean stress
                     cell_rhs(i) -=
                         (biot_alpha / K_b *
-                         (prev_fs_mean_stress - prev_timestep_mean_stress) *
+                         (prev_fs_mean_stress - prev_timestep_mean_stress) /del_t*
                          fe_value.shape_value(i, q) * fe_value.JxW(q));
                 }
             }
