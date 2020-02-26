@@ -83,6 +83,7 @@ private:
     double lame_lambda;
     double lame_mu;
     double perm;
+    bool b_p_mult;
     TestCase test_case= benchmark;
     // coupling
     int criteria = 3; // 1: change in mean stress; 2: change in relative mean stress; 3: a posteriori

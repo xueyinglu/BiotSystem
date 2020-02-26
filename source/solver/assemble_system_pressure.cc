@@ -51,15 +51,6 @@ void BiotSystem::assemble_system_pressure()
             fe_value_displacement.get_function_gradients(prev_timestep_sol_displacement, prev_timestep_sol_grad_u_values);
             fe_value_displacement.get_function_gradients(prev_fs_sol_displacement, prev_fs_sol_grad_u_values);
             fe_value_displacement.get_function_gradients(initial_displacement, initial_grad_u_values);
-            /*
-        cout << "perm =" << permeability_values[0] << endl;
-        cout << "mu_f =" << mu_f << endl;
-        cout << "biot_alpha = " << biot_alpha << endl;
-        cout << "biot_inv_M =" << biot_inv_M <<endl;
-        cout << "lame_lambda = " << lame_lambda <<endl;
-        cout << "lame_mu = " << lame_mu <<endl;
-        cout << "K_b = " << K_b << endl;
-        */
             /* assemble cell level matrix and rhs */
             for (unsigned int q = 0; q < n_q_points; q++)
             {
@@ -73,26 +64,32 @@ void BiotSystem::assemble_system_pressure()
                 // stress-dependent perm
                 const Tensor<2, dim> init_grad_u = Tensors ::get_grad_u<dim>(q, initial_grad_u_values);
                 const double init_div_u = Tensors ::get_divergence_u<dim>(init_grad_u);
-                double initial_mean_stress =K_b * init_div_u - biot_alpha * initial_pressure_values[q];
-                permeability_values[q] *= exp(-0.01*(prev_fs_mean_stress - initial_mean_stress));
-                if (permeability_values[q] >1e-3){
-                   cout << "initial stress = " << initial_mean_stress << endl;
-                   cout << "current stress = " << prev_fs_mean_stress << endl;
-                   cout << "k= "<< permeability_values[q];
+                double initial_mean_stress = K_b * init_div_u - biot_alpha * initial_pressure_values[q];
+                double p_mult = 1;
+                if (b_p_mult)
+                {
+                    double p_mult = exp(-0.01 * (prev_fs_mean_stress - initial_mean_stress));
+                    if (permeability_values[q] > 1e-3)
+                    {
+                        cout << "initial stress = " << initial_mean_stress << endl;
+                        cout << "current stress = " << prev_fs_mean_stress << endl;
+                        cout << "k= " << permeability_values[q] * p_mult;
+                    }
                 }
+
                 for (unsigned int i = 0; i < dofs_per_cell; i++)
                 {
                     for (unsigned int j = 0; j < dofs_per_cell; j++)
                     {
                         // elliptic part
                         cell_matrix(i, j) +=
-                            (1.0/ mu_f * permeability_values[q] * // 1/mu_f * k
-                             fe_value.shape_grad(i, q) *             // grad phi_i(x_q)
-                             fe_value.shape_grad(j, q) *             // grad phi_j(x_q)
-                             fe_value.JxW(q));                       // dx
+                            (1.0 / mu_f * permeability_values[q] * p_mult * // 1/mu_f * k
+                             fe_value.shape_grad(i, q) *                    // grad phi_i(x_q)
+                             fe_value.shape_grad(j, q) *                    // grad phi_j(x_q)
+                             fe_value.JxW(q));                              // dx
                         // parabolic part
                         cell_matrix(i, j) +=
-                            ((biot_inv_M + biot_alpha * biot_alpha / K_b)/del_t *                              // (1/M + alpha^2/K_b)/del_t
+                            ((biot_inv_M + biot_alpha * biot_alpha / K_b) / del_t *                      // (1/M + alpha^2/K_b)/del_t
                              fe_value.shape_value(i, q) * fe_value.shape_value(j, q) * fe_value.JxW(q)); // phi(x_q)*phi(x_q) dx
                     }
                     if (test_case == TestCase::heterogeneous)
@@ -107,21 +104,21 @@ void BiotSystem::assemble_system_pressure()
                         {
                             cell_rhs(i) +=
                                 (fe_value.shape_value(i, q) * // phi_i(x_q)
-                                 -20000 *                          // f(x_q)
+                                 -20000 *                     // f(x_q)
                                  fe_value.JxW(q));            // dx
                         }
                     }
 
                     // prev time step
                     cell_rhs(i) +=
-                        ((biot_inv_M + biot_alpha * biot_alpha / K_b)/del_t * // (1/M + alpha^2/K_b)/del_t
+                        ((biot_inv_M + biot_alpha * biot_alpha / K_b) / del_t * // (1/M + alpha^2/K_b)/del_t
                          prev_timestep_sol_pressure_values[q] *
                          fe_value.shape_value(i, q) * fe_value.JxW(q));
 
                     // change in mean stress
                     cell_rhs(i) -=
                         (biot_alpha / K_b *
-                         (prev_fs_mean_stress - prev_timestep_mean_stress) /del_t*
+                         (prev_fs_mean_stress - prev_timestep_mean_stress) / del_t *
                          fe_value.shape_value(i, q) * fe_value.JxW(q));
                 }
             }

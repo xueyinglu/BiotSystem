@@ -49,4 +49,5 @@ BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T, dou
     criteria = _criteria;
     // adaptivity = true;
     adaptivity = false;
+    b_p_mult =false;
 }
