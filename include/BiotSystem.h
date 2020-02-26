@@ -48,6 +48,7 @@ private:
     SparseMatrix<double> system_matrix_pressure;
 
     Vector<double> solution_pressure;
+    Vector<double> initial_pressure;
     Vector<double> system_rhs_pressure;
 
     // displacement solution
@@ -59,6 +60,7 @@ private:
     SparseMatrix<double> system_matrix_displacement;
 
     Vector<double> solution_displacement;
+    Vector<double> initial_displacement;
     Vector<double> system_rhs_displacement;
     ConvergenceTable convergence_table;
 
@@ -70,14 +72,13 @@ private:
     // Data
     double mu_f = 1; // fluid viscosity
     RightHandSide right_hand_side; // mechanics equation body force
-    //InitialPressure initial_pressure;
     ConstantFunction<dim> permeability;
     ConstantFunction<dim> lambda, mu;
     PermFunction perm_function;
     LambdaFunction lambda_function;
     MuFunction mu_function;
     double pressure_dirichlet_bc;
-    double initial_pressure;
+    double initial_pressure_value;
     Tensor<1,dim> traction_bc;
     double lame_lambda;
     double lame_mu;

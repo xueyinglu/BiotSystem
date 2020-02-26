@@ -37,7 +37,7 @@ void BiotSystem::run_fixed_stress()
         cout << "heterogeneous test" << endl;
 
         VectorTools::interpolate(dof_handler_pressure,
-                                 ConstantFunction<dim>(initial_pressure),
+                                 ConstantFunction<dim>(initial_pressure_value),
                                  solution_pressure);
         prev_timestep_sol_pressure = solution_pressure;
         cout << "Initializing u_0" << endl;
@@ -45,6 +45,8 @@ void BiotSystem::run_fixed_stress()
         solve_displacement();
         prev_timestep_sol_displacement = solution_displacement;
     }
+    initial_pressure = solution_pressure;
+    initial_displacement = solution_displacement;
 
     for (timestep = 1; timestep < (T / del_t); timestep++)
     {

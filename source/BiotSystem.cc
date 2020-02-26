@@ -48,5 +48,5 @@ BiotSystem::BiotSystem(int _num_global_refinement, double _del_t, double _T, dou
     tol_fixed_stress = _fs_tol;
     criteria = _criteria;
     // adaptivity = true;
-    adaptivity = true;
+    adaptivity = false;
 }

@@ -20,8 +20,10 @@ void BiotSystem::assemble_system_pressure()
     vector<double> permeability_values(n_q_points);
     vector<double> prev_timestep_sol_pressure_values(n_q_points);
     vector<double> prev_fs_sol_pressure_values(n_q_points);
+    vector<double> initial_pressure_values(n_q_points);
     vector<vector<Tensor<1, dim>>> prev_timestep_sol_grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
     vector<vector<Tensor<1, dim>>> prev_fs_sol_grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
+    vector<vector<Tensor<1, dim>>> initial_grad_u_values(n_q_points, vector<Tensor<1, dim>>(dim));
     double prev_timestep_mean_stress;
     double prev_fs_mean_stress;
     typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_pressure.begin_active(),
@@ -45,8 +47,10 @@ void BiotSystem::assemble_system_pressure()
             }
             fe_value.get_function_values(prev_timestep_sol_pressure, prev_timestep_sol_pressure_values);
             fe_value.get_function_values(prev_fs_sol_pressure, prev_fs_sol_pressure_values);
+            fe_value.get_function_values(initial_pressure, initial_pressure_values);
             fe_value_displacement.get_function_gradients(prev_timestep_sol_displacement, prev_timestep_sol_grad_u_values);
             fe_value_displacement.get_function_gradients(prev_fs_sol_displacement, prev_fs_sol_grad_u_values);
+            fe_value_displacement.get_function_gradients(initial_displacement, initial_grad_u_values);
             /*
         cout << "perm =" << permeability_values[0] << endl;
         cout << "mu_f =" << mu_f << endl;
@@ -66,6 +70,16 @@ void BiotSystem::assemble_system_pressure()
                 const double prev_fs_div_u = Tensors ::get_divergence_u<dim>(prev_fs_grad_u);
                 prev_timestep_mean_stress = K_b * prev_time_div_u - biot_alpha * prev_timestep_sol_pressure_values[q];
                 prev_fs_mean_stress = K_b * prev_fs_div_u - biot_alpha * prev_fs_sol_pressure_values[q];
+                // stress-dependent perm
+                const Tensor<2, dim> init_grad_u = Tensors ::get_grad_u<dim>(q, initial_grad_u_values);
+                const double init_div_u = Tensors ::get_divergence_u<dim>(init_grad_u);
+                double initial_mean_stress =K_b * init_div_u - biot_alpha * initial_pressure_values[q];
+                permeability_values[q] *= exp(-0.01*(prev_fs_mean_stress - initial_mean_stress));
+                if (permeability_values[q] >1e-3){
+                   cout << "initial stress = " << initial_mean_stress << endl;
+                   cout << "current stress = " << prev_fs_mean_stress << endl;
+                   cout << "k= "<< permeability_values[q];
+                }
                 for (unsigned int i = 0; i < dofs_per_cell; i++)
                 {
                     for (unsigned int j = 0; j < dofs_per_cell; j++)
