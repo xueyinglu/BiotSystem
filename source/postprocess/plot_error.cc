@@ -70,20 +70,20 @@ void BiotSystem::plot_error() const
     else if (test_case == TestCase::heterogeneous)
     {   
         DataOut<dim> data_out_prop;
-        data_out_prop.attach_dof_handler(dof_handler_pressure);
+        data_out_prop.attach_dof_handler(dof_handler_output);
         Vector<double> cell_perm;
-        cell_perm.reinit(dof_handler_pressure.n_dofs());
-        VectorTools::interpolate(dof_handler_pressure,
+        cell_perm.reinit(dof_handler_output.n_dofs());
+        VectorTools::interpolate(dof_handler_output,
                                  perm_function,
                                  cell_perm);
         Vector<double> cell_lambda;
-        cell_lambda.reinit(dof_handler_pressure.n_dofs());
-        VectorTools::interpolate(dof_handler_pressure,
+        cell_lambda.reinit(dof_handler_output.n_dofs());
+        VectorTools::interpolate(dof_handler_output,
                                  lambda_function,
                                  cell_lambda);
         Vector<double> cell_mu;
-        cell_mu.reinit(dof_handler_pressure.n_dofs());
-        VectorTools::interpolate(dof_handler_pressure,
+        cell_mu.reinit(dof_handler_output.n_dofs());
+        VectorTools::interpolate(dof_handler_output,
                                  mu_function,
                                  cell_mu);
         
