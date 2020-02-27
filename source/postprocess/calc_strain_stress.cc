@@ -64,7 +64,6 @@ void BiotSystem::calc_strain_stress()
     data_out.add_data_vector(cell_strain_yy, "strain_yy", DataOut<dim>::type_dof_data);
     data_out.add_data_vector(cell_vstrain, "vstrain", DataOut<dim>::type_dof_data);
     data_out.build_patches();
-        cout << "line 88" << endl;
     if (adaptivity == true)
     {
         ofstream output("visual/a-cell-" + to_string(timestep) + ".vtk");
@@ -73,8 +72,6 @@ void BiotSystem::calc_strain_stress()
     else
     {
         ofstream output("visual/cell-" + to_string(timestep) + ".vtk");
-        cout << "line 97" << endl;
         data_out.write_vtk(output);
     }
-        cout << "line 98" << endl;
 }
