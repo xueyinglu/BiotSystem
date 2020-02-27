@@ -68,7 +68,36 @@ void BiotSystem::plot_error() const
     }
 
     else if (test_case == TestCase::heterogeneous)
-    {
+    {   
+        DataOut<dim> data_out_prop;
+        data_out_prop.attach_dof_handler(dof_handler_pressure);
+        Vector<double> cell_perm;
+        cell_perm.reinit(dof_handler_pressure.n_dofs());
+        VectorTools::interpolate(dof_handler_pressure,
+                                 perm_function,
+                                 cell_perm);
+        Vector<double> cell_lambda;
+        cell_lambda.reinit(dof_handler_pressure.n_dofs());
+        VectorTools::interpolate(dof_handler_pressure,
+                                 lambda_function,
+                                 cell_lambda);
+        Vector<double> cell_mu;
+        cell_mu.reinit(dof_handler_pressure.n_dofs());
+        VectorTools::interpolate(dof_handler_pressure,
+                                 mu_function,
+                                 cell_mu);
+        
+        //data_out_prop.add_data_vector(cell_perm, "perm", DataOut<dim>::type_dof_data);
+        //data_out_prop.add_data_vector(cell_lambda, "lambda", DataOut<dim>::type_dof_data);
+        //data_out_prop.add_data_vector(cell_mu, "mu", DataOut<dim>::type_dof_data);
+        cout << "line 93" << endl;
+        data_out_prop.add_data_vector(cell_perm, "perm");
+        data_out_prop.add_data_vector(cell_lambda, "lambda");
+        data_out_prop.add_data_vector(cell_mu, "mu");
+        data_out_prop.build_patches();
+        ofstream output_prop("visual/property-" + std::to_string(timestep) + ".vtk"); 
+        data_out_prop.write_vtk(output_prop);
+        
         DataOut<dim> data_out;
         data_out.attach_dof_handler(dof_handler_pressure);
         data_out.add_data_vector(solution_pressure, "p");

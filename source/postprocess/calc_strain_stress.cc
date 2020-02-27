@@ -1,6 +1,5 @@
 #include "BiotSystem.h"
 #include "AuxTools.h"
-
 void BiotSystem::calc_strain_stress()
 {
 
@@ -54,6 +53,7 @@ void BiotSystem::calc_strain_stress()
             cell_vstrain[output_dofs[0]] += vstrain;
         }
     }
+
     DataOut<dim> data_out;
     data_out.attach_dof_handler(dof_handler_output);
     data_out.add_data_vector(cell_stress_xx, "stress_xx", DataOut<dim>::type_dof_data);
@@ -64,14 +64,17 @@ void BiotSystem::calc_strain_stress()
     data_out.add_data_vector(cell_strain_yy, "strain_yy", DataOut<dim>::type_dof_data);
     data_out.add_data_vector(cell_vstrain, "vstrain", DataOut<dim>::type_dof_data);
     data_out.build_patches();
+        cout << "line 88" << endl;
     if (adaptivity == true)
     {
-        ofstream output("visual/a-stress" + to_string(timestep) + ".vtk");
+        ofstream output("visual/a-cell-" + to_string(timestep) + ".vtk");
         data_out.write_vtk(output);
     }
     else
     {
-        ofstream output("visual/stress" + to_string(timestep) + ".vtk");
+        ofstream output("visual/cell-" + to_string(timestep) + ".vtk");
+        cout << "line 97" << endl;
         data_out.write_vtk(output);
     }
+        cout << "line 98" << endl;
 }

@@ -80,9 +80,6 @@ private:
     double pressure_dirichlet_bc;
     double initial_pressure_value;
     Tensor<1,dim> traction_bc;
-    double lame_lambda;
-    double lame_mu;
-    double perm;
     bool b_p_mult;
     TestCase test_case= benchmark;
     // coupling

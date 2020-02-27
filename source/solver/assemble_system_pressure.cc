@@ -76,7 +76,6 @@ void BiotSystem::assemble_system_pressure()
                         cout << "k= " << permeability_values[q] * p_mult;
                     }
                 }
-
                 for (unsigned int i = 0; i < dofs_per_cell; i++)
                 {
                     for (unsigned int j = 0; j < dofs_per_cell; j++)
@@ -92,6 +91,7 @@ void BiotSystem::assemble_system_pressure()
                             ((biot_inv_M + biot_alpha * biot_alpha / K_b) / del_t *                      // (1/M + alpha^2/K_b)/del_t
                              fe_value.shape_value(i, q) * fe_value.shape_value(j, q) * fe_value.JxW(q)); // phi(x_q)*phi(x_q) dx
                     }
+                    
                     if (test_case == TestCase::heterogeneous)
                     {
                         // add a well term
@@ -104,11 +104,11 @@ void BiotSystem::assemble_system_pressure()
                         {
                             cell_rhs(i) +=
                                 (fe_value.shape_value(i, q) * // phi_i(x_q)
-                                 -20000 *                     // f(x_q)
+                                 -20 *                     // f(x_q)
                                  fe_value.JxW(q));            // dx
                         }
                     }
-
+                    
                     // prev time step
                     cell_rhs(i) +=
                         ((biot_inv_M + biot_alpha * biot_alpha / K_b) / del_t * // (1/M + alpha^2/K_b)/del_t
