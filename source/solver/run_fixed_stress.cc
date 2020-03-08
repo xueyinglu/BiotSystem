@@ -54,8 +54,6 @@ void BiotSystem::run_fixed_stress()
         t += del_t;
         fixed_stress_iteration();
         plot_error();
-        // output_displacement(timestep, -1);
-        // output_pressure(timestep, -1);
         if (test_case == TestCase::benchmark || test_case == TestCase::terzaghi)
         {
             calc_error();
