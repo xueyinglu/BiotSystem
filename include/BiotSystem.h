@@ -67,6 +67,7 @@ private:
     vector<double> l2_error_p;
     vector<double> l2_error_u;
     vector<double> energy_error_u;
+    vector<double> h_error_p_sq;
     vector<int> num_fs;
 
     // Data
@@ -155,6 +156,7 @@ private:
     void calc_a_posteriori_indicators_u();
 
     double calc_u_energy_norm();
+    void calc_p_h_norm();
     void calc_efficiency_indices();
 
 };
