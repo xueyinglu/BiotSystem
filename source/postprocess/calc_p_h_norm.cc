@@ -15,6 +15,7 @@ void BiotSystem::calc_p_h_norm()
     for (; cell != endc; ++cell)
     {
         fe_value_pressure.reinit(cell);
+        fe_value_pressure.get_function_gradients(solution_pressure, grad_p_values);
         permeability.value_list(fe_value_pressure.get_quadrature_points(), permeability_values);
         if (test_case == TestCase::heterogeneous)
         {
