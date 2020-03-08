@@ -294,8 +294,8 @@ void BiotSystem::calc_a_posteriori_indicators_u()
                     face_grad_u = Tensors::get_grad_u<dim>(q, face_grad_u_values);
                     face_E = 0.5 * (face_grad_u + transpose(face_grad_u));
                     face_sigma = 2 * mu_values[q] * face_E + lambda_values[q] * trace(face_E) * identity;
-                    Tensor<1, dim> dum = face_sigma * n - traction_bc;
-                    cout << "dum = " << dum << endl;
+                    Tensor<1, dim> dum = face_sigma * n;
+                    // Tensor<1, dim> dum = face_sigma * n - traction_bc;
                     eta_e_N_sigma += dum.norm_square() * fe_face_u.JxW(q);
                     cell_eta_u[output_dofs[0]] += dum.norm_square() * fe_face_u.JxW(q);
                 }
