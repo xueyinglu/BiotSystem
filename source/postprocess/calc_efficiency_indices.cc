@@ -13,7 +13,17 @@ void BiotSystem::calc_efficiency_indices(){
 
     efficiency_table.add_value("time", t);
     efficiency_table.add_value("num_fs", num_fs.back());
-    efficiency_table.add_value("error", error);
-    efficiency_table.add_value("eta_sum", eta_sum.back());
+    efficiency_table.add_value("sqrt_eta_sum", sqrt(eta_sum.back()));
+    efficiency_table.add_value("error", sqrt(error));
     efficiency_table.add_value("index", I_eff);
+
+    efficiency_table.set_precision("error", 6);
+    efficiency_table.set_precision("index", 6);
+    efficiency_table.set_precision("sqrt_eta_sum", 6);
+    efficiency_table.set_scientific("error",true);
+    efficiency_table.set_scientific("index",true);
+    efficiency_table.set_scientific("sqrt_eta_sum",true);
+    efficiency_table.set_tex_table_caption("Efficiency Index: $h = 1/(2^" + to_string(num_global_refinement)+ "), \\Delta t = " + to_string(del_t) +"$");
+    ofstream efficiency_table_file("efficiency-"+to_string(num_global_refinement) + "-" +to_string(del_t) +".tex");
+    efficiency_table.write_tex(efficiency_table_file, false);
 }
