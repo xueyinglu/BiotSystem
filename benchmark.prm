@@ -1,0 +1,16 @@
+# Listing of Example BiotSystem Benchmark test
+# ----------------------------------------------------
+
+subsection Global parameters
+  set Global refinement numbers         = 6
+  set Final time                        = 0.01
+  set Timestep size			= 2.5e-4
+  set Fixed-stress criteria             = 1
+  set Fixed-stress tolerance            = 1e-7
+  set Output filename	    	        = error
+  set Test case                         = benchmark
+  set Adaptivity flag                   = false
+  set Permeability multiplier flag      = false
+  # Add here to read-in the grid
+end
+
