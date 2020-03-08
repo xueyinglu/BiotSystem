@@ -57,6 +57,10 @@ void BiotSystem::calc_a_posteriori_indicators_p()
         fe_value_displacement.get_function_gradients(solution_displacement, grad_u_values);
         fe_value_displacement.get_function_gradients(prev_timestep_sol_displacement, prev_timestep_grad_u_values);
         permeability.value_list(fe_value_pressure.get_quadrature_points(), permeability_values);
+        if (test_case == TestCase::heterogeneous)
+        {
+            perm_function.value_list(fe_value_pressure.get_quadrature_points(), permeability_values);
+        }
         for (unsigned int q = 0; q < n_q_points; q++)
         {
             Tensor<1, dim> cell_difference = grad_p_values[q] - prev_timestep_grad_p_values[q];
@@ -92,7 +96,7 @@ void BiotSystem::calc_a_posteriori_indicators_p()
     FEFaceValues<dim> fe_face_values(fe_pressure, face_quadrature,
                                      update_values | update_normal_vectors | update_gradients | update_quadrature_points | update_JxW_values);
     FESubfaceValues<dim> fe_subface_values(fe_pressure, face_quadrature,
-                                        update_values | update_normal_vectors | update_gradients | update_quadrature_points | update_JxW_values);
+                                           update_values | update_normal_vectors | update_gradients | update_quadrature_points | update_JxW_values);
     FEFaceValues<dim> fe_face_values_neighbor(fe_pressure, face_quadrature,
                                               update_values | update_gradients | update_quadrature_points | update_JxW_values);
 
@@ -132,6 +136,10 @@ void BiotSystem::calc_a_posteriori_indicators_p()
                         fe_subface_values.get_function_gradients(solution_pressure, face_grad_p_values);
                         fe_face_values_neighbor.get_function_gradients(solution_pressure, neighbor_grad_p_values);
                         permeability.value_list(fe_subface_values.get_quadrature_points(), face_perm_values);
+                        if (test_case == TestCase::heterogeneous)
+                        {
+                            perm_function.value_list(fe_subface_values.get_quadrature_points(), face_perm_values);
+                        }
                         for (unsigned int q = 0; q < fe_subface_values.n_quadrature_points; ++q)
                         {
                             const Tensor<1, dim> &n = fe_subface_values.normal_vector(q);
@@ -153,6 +161,10 @@ void BiotSystem::calc_a_posteriori_indicators_p()
                     fe_face_values.get_function_gradients(solution_pressure, face_grad_p_values);
                     fe_face_values_neighbor.get_function_gradients(solution_pressure, neighbor_grad_p_values);
                     permeability.value_list(fe_face_values.get_quadrature_points(), face_perm_values);
+                    if (test_case == TestCase::heterogeneous)
+                    {
+                        perm_function.value_list(fe_face_values.get_quadrature_points(), face_perm_values);
+                    }
                     for (unsigned int q = 0; q < fe_face_values.n_quadrature_points; q++)
                     {
                         const Tensor<1, dim> &n = fe_face_values.normal_vector(q);
@@ -180,6 +192,10 @@ void BiotSystem::calc_a_posteriori_indicators_p()
                     fe_face_values.get_function_gradients(solution_pressure, face_grad_p_values);
                     fe_subface_values.get_function_gradients(solution_pressure, neighbor_grad_p_values);
                     permeability.value_list(fe_face_values.get_quadrature_points(), face_perm_values);
+                    if (test_case == TestCase::heterogeneous)
+                    {
+                        perm_function.value_list(fe_face_values.get_quadrature_points(), face_perm_values);
+                    }
                     for (unsigned int q = 0; q < fe_face_values.n_quadrature_points; q++)
                     {
                         const Tensor<1, dim> &n = fe_face_values.normal_vector(q);

@@ -5,6 +5,10 @@ void BiotSystem::calc_efficiency_indices(){
     +eta_face_partial_sigma.back() + eta_face_sigma.back() + eta_partial_u.back()+eta_u.back());
 
     double error = l2_error_p.back()*l2_error_p.back()*biot_inv_M/4 + energy_error_u.back()*energy_error_u.back();
+
+    for (auto &n: h_error_p_sq){
+        error += del_t * n;
+    }
     double I_eff = sqrt(eta_sum.back()/error);
 
     efficiency_table.add_value("time", t);
