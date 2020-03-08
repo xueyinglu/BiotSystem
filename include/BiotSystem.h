@@ -1,6 +1,7 @@
 #ifndef BIOT_SYSTEM_H_
 #define BIOT_SYSTEM_H_
 #include "DealiiHeader.h"
+#include "ParameterReader.h"
 #include "InitialPressure.h"
 #include "RightHandSide.h"
 #include "PermFunction.h"
@@ -15,9 +16,7 @@ using namespace std;
 class BiotSystem
 {
 public:
-    BiotSystem();
-    BiotSystem(int _num_global_refinement, double _del_t, double _T, double _fs_tol);
-    BiotSystem(int _num_global_refinement, double _del_t, double _T, double _fs_tol, int _criteria);
+    BiotSystem(ParameterHandler &);
     // virtual BiotSystem();
     void run_fixed_stress();
     void check_disp_solver_convergence();
@@ -32,6 +31,7 @@ public:
 
 
 private:
+    ParameterHandler &prm;
     double del_t = 0.01;
     double T = 1;
     double t = 0;
@@ -81,10 +81,10 @@ private:
     double pressure_dirichlet_bc;
     double initial_pressure_value;
     Tensor<1,dim> traction_bc;
-    bool b_p_mult;
+    bool b_p_mult = false;
     TestCase test_case= benchmark;
     // coupling
-    int criteria = 3; // 1: change in mean stress; 2: change in relative mean stress; 3: a posteriori
+    int criteria = 1; // 1: change in mean stress; 2: change in relative mean stress; 3: a posteriori
     double biot_alpha = 0.75;
     double K_b = 7./12; //K_b = lambda +2/3*mu
     double biot_inv_M = 3./28;
@@ -129,7 +129,9 @@ private:
     ConvergenceTable u_indicators_table;
     ConvergenceTable efficiency_table;
 
+    string filename_base;
 
+    void set_control_parameters();
     void make_grid();
     void setup_system();
     void set_material_properties();

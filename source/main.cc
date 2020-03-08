@@ -1,9 +1,10 @@
 #include "BiotSystem.h"
 using namespace std;
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
   try
   {
+    /*
     int _numGlobalRefinement = atoi(argv[1]);
     double _delT = stod(argv[2]);
     double _T = stod(argv[3]);
@@ -11,8 +12,17 @@ int main(int argc, char* argv[])
     int _criteria = stod(argv[5]);
     BiotSystem convergence_test(_numGlobalRefinement, _delT, _T, _tol, _criteria);
     convergence_test.run_fixed_stress();
-  //   BiotSystem u_convergence;
-  //   u_convergence.check_disp_solver_convergence();
+    */
+    ParameterHandler prm;
+    ParameterReader param(prm);
+    if (argc > 1)
+      param.read_parameters(argv[1]);
+    else
+      param.read_parameters("benchmark.prm");
+    BiotSystem test(prm);
+    test.run_fixed_stress();
+    //   BiotSystem u_convergence;
+    //   u_convergence.check_disp_solver_convergence();
   }
   catch (std::exception &exc)
   {

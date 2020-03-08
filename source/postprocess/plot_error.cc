@@ -68,7 +68,7 @@ void BiotSystem::plot_error() const
     }
 
     else if (test_case == TestCase::heterogeneous)
-    {   
+    {
         DataOut<dim> data_out_prop;
         data_out_prop.attach_dof_handler(dof_handler_output);
         Vector<double> cell_perm;
@@ -86,7 +86,7 @@ void BiotSystem::plot_error() const
         VectorTools::interpolate(dof_handler_output,
                                  mu_function,
                                  cell_mu);
-        
+
         //data_out_prop.add_data_vector(cell_perm, "perm", DataOut<dim>::type_dof_data);
         //data_out_prop.add_data_vector(cell_lambda, "lambda", DataOut<dim>::type_dof_data);
         //data_out_prop.add_data_vector(cell_mu, "mu", DataOut<dim>::type_dof_data);
@@ -95,23 +95,15 @@ void BiotSystem::plot_error() const
         data_out_prop.add_data_vector(cell_lambda, "lambda");
         data_out_prop.add_data_vector(cell_mu, "mu");
         data_out_prop.build_patches();
-        ofstream output_prop("visual/property-" + std::to_string(timestep) + ".vtk"); 
+        ofstream output_prop("visual/property-" + std::to_string(timestep) + ".vtk");
         data_out_prop.write_vtk(output_prop);
-        
+
         DataOut<dim> data_out;
         data_out.attach_dof_handler(dof_handler_pressure);
         data_out.add_data_vector(solution_pressure, "p");
         data_out.build_patches();
-        if (adaptivity == true)
-        {
-            ofstream output("visual/a-sol-p-" + std::to_string(timestep) + ".vtk");
-            data_out.write_vtk(output);
-        }
-        else
-        {
-            ofstream output("visual/sol-p-" + std::to_string(timestep) + ".vtk");
-            data_out.write_vtk(output);
-        }
+        ofstream output("visual/" + filename_base + "-p-" + std::to_string(timestep) + ".vtk");
+        data_out.write_vtk(output);
 
         DataOut<dim> data_out_u;
         data_out_u.attach_dof_handler(dof_handler_displacement);
@@ -120,15 +112,7 @@ void BiotSystem::plot_error() const
         u_names.push_back("u_y");
         data_out_u.add_data_vector(solution_displacement, u_names);
         data_out_u.build_patches();
-        if (adaptivity == true)
-        {
-            ofstream output_u("visual/a-sol-u-" + std::to_string(timestep) + ".vtk");
-            data_out_u.write_vtk(output_u);
-        }
-        else
-        {
-            ofstream output_u("visual/sol-u-" + std::to_string(timestep) + ".vtk");
-            data_out_u.write_vtk(output_u);
-        }
+        ofstream output_u("visual/" + filename_base + "-u-" + std::to_string(timestep) + ".vtk");
+        data_out_u.write_vtk(output_u);
     }
 }
