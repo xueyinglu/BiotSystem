@@ -91,24 +91,28 @@ void BiotSystem::assemble_system_pressure()
                             ((biot_inv_M + biot_alpha * biot_alpha / K_b) / del_t *                      // (1/M + alpha^2/K_b)/del_t
                              fe_value.shape_value(i, q) * fe_value.shape_value(j, q) * fe_value.JxW(q)); // phi(x_q)*phi(x_q) dx
                     }
-                    
+
                     if (test_case == TestCase::heterogeneous)
-                    {
-                        // add a well term
-                        Point<2> well1 = Point<2>(0.5, 0.25 - 1. / 128);
-                        Point<2> well2 = Point<2>(0.5, 0.5 - 1. / 128);
-                        Point<2> well3 = Point<2>(0.5, 0.75 - 1. / 128);
+                    {                    // add a well term
+                        /* ARMA paper */ /*
+                    Point<2> well1 = Point<2>(0.5, 0.25 - 1. / 128);
+                    Point<2> well2 = Point<2>(0.5, 0.5 - 1. / 128);
+                    Point<2> well3 = Point<2>(0.5, 0.75 - 1. / 128);
+                    */
+                        Point<2> well1 = Point<2>(0.5, 21. / 64 + 1. / 128);
+                        Point<2> well2 = Point<2>(0.5, 42. / 64 + 1. / 128);
                         if (fe_value.quadrature_point(q).distance(well1) < 1. / 128 ||
-                            fe_value.quadrature_point(q).distance(well2) < 1. / 128 ||
-                            fe_value.quadrature_point(q).distance(well3) < 1. / 128)
+                            fe_value.quadrature_point(q).distance(well2) < 1. / 128) //||
+                        //fe_value.quadrature_point(q).distance(well3) < 1. / 128)
+
                         {
                             cell_rhs(i) +=
                                 (fe_value.shape_value(i, q) * // phi_i(x_q)
-                                 -20 *                     // f(x_q)
+                                 -20 *                        // f(x_q)
                                  fe_value.JxW(q));            // dx
                         }
                     }
-                    
+
                     // prev time step
                     cell_rhs(i) +=
                         ((biot_inv_M + biot_alpha * biot_alpha / K_b) / del_t * // (1/M + alpha^2/K_b)/del_t
