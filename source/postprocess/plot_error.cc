@@ -91,9 +91,9 @@ void BiotSystem::plot_error() const
         //data_out_prop.add_data_vector(cell_lambda, "lambda", DataOut<dim>::type_dof_data);
         //data_out_prop.add_data_vector(cell_mu, "mu", DataOut<dim>::type_dof_data);
         cout << "line 93" << endl;
-        data_out_prop.add_data_vector(cell_perm, "perm");
-        data_out_prop.add_data_vector(cell_lambda, "lambda");
-        data_out_prop.add_data_vector(cell_mu, "mu");
+        data_out_prop.add_data_vector(cell_perm, "perm",DataOut<dim>::type_dof_data);
+        data_out_prop.add_data_vector(cell_lambda, "lambda",DataOut<dim>::type_dof_data);
+        data_out_prop.add_data_vector(cell_mu, "mu",DataOut<dim>::type_dof_data);
         data_out_prop.build_patches();
         ofstream output_prop("visual/property-" + std::to_string(timestep) + ".vtk");
         data_out_prop.write_vtk(output_prop);

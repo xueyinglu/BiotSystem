@@ -4,33 +4,47 @@ void BiotSystem::fixed_stress_iteration()
 {
     bool iteration = true;
     int fs_count = 0;
-    double l2_norm;
+    vector<double> fs_change;
     while (iteration)
     {
         prev_fs_sol_pressure = solution_pressure;
         prev_fs_sol_displacement = solution_displacement;
         fs_count++;
         cout << "fixed stress no. " << fs_count << endl;
-
+        cout << "solve for pressure" << endl;
         assemble_system_pressure();
-
         solve_pressure();
+        cout << "solve for displacement" << endl;
         assemble_system_displacement();
         solve_displacement();
-        if (criteria !=3)
+        fs_change = check_fs_convergence();
+        if (criteria == 1)
         {
-            l2_norm = check_fs_convergence();
-            iteration = (l2_norm > tol_fixed_stress);
+            iteration = (fs_change[1] > tol_fixed_stress);
+        }
+        else if (criteria == 2)
+        {
+            iteration = (fs_change[2] > tol_fixed_stress);
         }
         else
         {
-            l2_norm = check_fs_convergence();
-            eta_fs.push_back(1 / sqrt(del_t) * l2_norm); 
+            eta_fs.push_back(1 / sqrt(del_t) * fs_change[0]);
             calc_a_posteriori_indicators_p();
             calc_a_posteriori_indicators_u();
-            iteration = (eta_alg.back() > 0.1 * min(eta_flow.back() + eta_time.back() 
-            , eta_face_partial_sigma.back() + eta_face_sigma.back() + eta_partial_u.back() + eta_u.back()));
-            if (iteration){
+            if (criteria == 3)
+            {
+
+                iteration = (eta_alg.back() > 0.1 * min(eta_flow.back() + eta_time.back(),
+                                                        eta_face_partial_sigma.back() + eta_face_sigma.back() + eta_partial_u.back() + eta_u.back()));
+            }
+            else if (criteria == 4)
+            {
+
+                iteration = (eta_alg.back() > 0.1 * (eta_flow.back() + eta_time.back() +
+                                                     eta_face_partial_sigma.back() + eta_face_sigma.back() + eta_partial_u.back() + eta_u.back()));
+            }
+            if (iteration)
+            {
                 eta_fs.pop_back();
                 eta_alg.pop_back();
                 eta_flow.pop_back();
@@ -48,6 +62,8 @@ void BiotSystem::fixed_stress_iteration()
         }
     }
     num_fs.push_back(fs_count);
-    //TODO: If convergence criteria = 2 this is not correct
-    eta_fs.push_back(1 / sqrt(del_t) * l2_norm);
+    if (criteria != 3)
+    {
+        eta_fs.push_back(1.0 / sqrt(del_t) * fs_change[0]);
+    }
 }
